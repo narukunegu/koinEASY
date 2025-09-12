@@ -8,20 +8,16 @@
     "vite.config.*": "jsconfig*, vitest.config.*, cypress.config.*, playwright.config.*",
     "package.json": "package-lock.json, pnpm*, .yarnrc*, yarn*, .eslint*, eslint*, .oxlint*, oxlint*, .prettier*, prettier*, .editorconfig"
   },
-  // Enable the ESlint flat config support
   "eslint.useFlatConfig": true,
 
-  // Disable the default formatter, use eslint instead
   "prettier.enable": false,
   "editor.formatOnSave": false,
 
-  // Auto fix
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "never"
   },
 
-  // Silent the stylistic rules in you IDE, but still auto fix them
   "eslint.rules.customizations": [
     { "rule": "style/*", "severity": "off" },
     { "rule": "format/*", "severity": "off" },
@@ -35,7 +31,6 @@
     { "rule": "*semi", "severity": "off" }
   ],
 
-  // Enable eslint for all supported languages
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -50,9 +45,6 @@
     "toml",
     "astro"
   ],
-  "i18n-ally.localesPaths": [
-    "src/i18n",
-    "src/i18n/locales"
-  ],
+  "i18n-ally.localesPaths": ["src/i18n", "src/i18n/locales"],
   "i18n-ally.keystyle": "nested"
 }

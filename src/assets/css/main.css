@@ -31,3 +31,23 @@ button {
 a {
   text-decoration: none;
 }
+
+@font-face {
+  font-family: "Gentium";
+  src:
+    url("@/assets/Gentium/Gentium-Regular.woff2") format("woff2"),
+    url("@/assets/Gentium/Gentium-Regular.woff") format("woff"),
+    url("@/assets/Gentium/Gentium-Bold.woff2") format("woff2"),
+    url("@/assets/Gentium/Gentium-Bold.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Gentium-Bold";
+  src:
+    url("@/assets/Gentium/Gentium-Bold.woff2") format("woff2"),
+    url("@/assets/Gentium/Gentium-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}

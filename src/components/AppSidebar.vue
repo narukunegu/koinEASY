@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import { useI18n } from 'vue-i18n'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Icon } from "@iconify/vue";
+import { useI18n } from "vue-i18n";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const sidebarRoutes = [
   {
-    name: 'home.label',
-    icon: 'ph:house-duotone',
-    path: '/home',
+    name: "home.label",
+    icon: "ph:house-duotone",
+    path: "/home",
   },
-]
+];
 </script>
 
 <template>
@@ -53,7 +57,7 @@ const sidebarRoutes = [
           </RouterLink>
         </TooltipTrigger>
         <TooltipContent side="right" :side-offset="5">
-          {{ t('settings.label') }}
+          {{ t("settings.label") }}
         </TooltipContent>
       </Tooltip>
     </div>
