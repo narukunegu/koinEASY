@@ -1,6 +1,6 @@
 [package]
 name = "koine-bros"
-version = "0.25.0"
+version = "0.25.1"
 description = "Koine Greek Virtual Keyboard & Simple Analysis"
 authors = [ "jos" ]
 edition = "2024"
