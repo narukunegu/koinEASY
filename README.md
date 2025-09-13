@@ -1,12 +1,13 @@
-# tauriv2-vue-desktop-starter
+# Koine Greek Study Helper
 
-A desktop application starter using the libraries and technologies:
+A desktop application with Koine Greek virtual keyboard and simple Greek text analysis.
 
 - Rust
   - [Tauri v2](https://beta.tauri.app/start/) as the desktop application framework.
   - [Tauri Store Plugin](https://v2.tauri.app/plugin/store/) for persistence.
   - [Tauri Log Plugin](https://v2.tauri.app/plugin/logging/) for logging.
-  - [CrabNebula DevTools](https://v2.tauri.app/develop/debug/crabnebula-devtools/) for development.
+  - [CrabNebula DevTools](https://v2.tauri.app/develop/debug/crabnebula-devtools/)
+    for development.
 
 - Vue.js 3
   - [Shadcn Vue + Tailwind CSS v4](https://www.shadcn-vue.com/) for components.
@@ -30,13 +31,15 @@ A desktop application starter using the libraries and technologies:
 
 ## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- [VS Code](https://code.visualstudio.com/)
+- [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
+- [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
 ## Prerequisites
 
-Follow [Tauri's prerequisites guide](https://v2.tauri.app/start/prerequisites/) to setup your development environment.
-
-Then rename all instances of `tauriv2-vue-desktop-starter` and `tauriv2_vue_desktop_starter` to your app name.
+Follow [Tauri's prerequisites guide](https://v2.tauri.app/start/prerequisites/)
+to setup your development environment.
 
 If you want to replace the package manager update:
 
@@ -64,9 +67,11 @@ For **Desktop** development, run: `pnpm tauri dev`
 
 #### Adding a new language
 
-Create a new JSON file in the [locales](./src/i18n/locales/) directory with the appropriate translations and the locale as the filename.
+Create a new JSON file in the [locales](./src/i18n/locales/) directory with the
+appropriate translations and the locale as the filename.
 
-Then update the `supportedLanguages` function in [lib/config.ts](./src/lib/config.ts) to include the new language.
+Then update the `supportedLanguages` function
+in [lib/config.ts](./src/lib/config.ts) to include the new language.
 
 ### Helpful Tips
 
@@ -76,7 +81,8 @@ Tauri Store Plugin stores `settings.json` at:
 
 #### App Icon
 
-Tauri CLI provides an [icon command](https://v2.tauri.app/reference/cli/#icon) `pnpm tauri icon` which takes an image path and generates icon files for your application.
+Tauri CLI provides an [icon command](https://v2.tauri.app/reference/cli/#icon)
+`pnpm tauri icon` which takes an image path and generates icon files for your application.
 
 ## Contributing
 
@@ -98,9 +104,15 @@ To build a binary, run:
 pnpm tauri build
 ```
 
-This repo is currently setup to create a release on Github when you merge to the `release` branch. See [https://github.com/tauri-apps/tauri-action/tree/dev](https://github.com/tauri-apps/tauri-action/tree/dev).
+This repo is currently setup to create a release on Github when you merge to
+the `release` branch.
+See [https://github.com/tauri-apps/tauri-action/tree/dev](https://github.com/tauri-apps/tauri-action/tree/dev).
 
 ### Caveats
 
-If you are using the [signing identity](./src-tauri/tauri.macos.conf.json#L20) `-` for **macOS**, when you first download and run the application, you will have to go to `System Settings` > `Privacy & Security` and allow your app to run.
-See [tauri-apps/tauri-action/issues/824](https://github.com/tauri-apps/tauri-action/issues/824) & [support.apple.com/open-a-mac-app-from-an-unidentified-developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac).
+If you are using the [signing identity](./src-tauri/tauri.macos.conf.json#L20)
+`-` for **macOS**, when you first download and run the application,
+you will have to go to `System Settings` > `Privacy & Security`
+and allow your app to run.
+See [tauri-apps/tauri-action/issues/824](https://github.com/tauri-apps/tauri-action/issues/824)
+& [support.apple.com/open-a-mac-app-from-an-unidentified-developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac).

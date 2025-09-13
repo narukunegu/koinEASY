@@ -36,7 +36,7 @@ function getSubKeyValue(key: KeyType) {
   return key.sub;
 }
 
-const getKeyClass = (key: KeyType) => {
+function getKeyClass(key: KeyType) {
   let style =
     "keyboard-key h-12 md:h-14 bg-white rounded-lg font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
   if (key.special) {
@@ -47,7 +47,7 @@ const getKeyClass = (key: KeyType) => {
       "keyboard-key h-12 md:h-14 rounded-lg font-semibold hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-red-300 hover:bg-gray-400 text-sm";
   }
   return style;
-};
+}
 
 function isSpecialKeyActive(key: KeyType) {
   return (
@@ -68,10 +68,8 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
         isShifted.value = !isShifted.value;
         break;
       case "caps":
+        output.value = "";
         isCapsLocked.value = !isCapsLocked.value;
-        break;
-      case "enter":
-        output.value = "\n";
         break;
       case "space":
         output.value = " ";
@@ -83,8 +81,8 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
     currentDiacritic.value = [];
   } else if (currentDiacritic.value!.length > 0 && diacriticsKey[vKey]) {
     currentDiacritic.value!.push(diacriticsKey[vKey] as string);
-    const combined = Object.entries(diacriticsMap).find(([k, ...v]) => {
-      return v[0].sort().join("-") === currentDiacritic.value!.sort().join("-");
+    const combined = Object.entries(diacriticsMap).find(([...v]) => {
+      return v[1].sort().join("-") === currentDiacritic.value!.sort().join("-");
     });
 
     if (combined) {
@@ -96,7 +94,7 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
   } else {
     output.value = getKeyValue(key);
     if (key.hasDiacritic) {
-      currentDiacritic.value = [key.value];
+      currentDiacritic.value = [getKeyValue(key)];
     } else {
       currentDiacritic.value = [];
     }
@@ -113,9 +111,12 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
 // Function to handle physical keyboard input events
 function handlePhysicalKeyDown(event: KeyboardEvent) {
   if (
-    ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.code)
+    ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Enter"].includes(
+      event.code,
+    )
   ) {
     currentDiacritic.value = [];
+    return;
   }
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
@@ -145,12 +146,12 @@ function handlePhysicalKeyDown(event: KeyboardEvent) {
   }
 }
 
-const handlePhysicalKeyUp = (event: KeyboardEvent) => {
+function handlePhysicalKeyUp(event: KeyboardEvent) {
   const keyCode = event.code;
   if (keyCode === "ShiftLeft" || keyCode === "ShiftRight") {
     isShifted.value = false;
   }
-};
+}
 
 // Lifecycle hooks to manage event listeners
 onMounted(() => {

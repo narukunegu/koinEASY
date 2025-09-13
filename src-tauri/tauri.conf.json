@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "koine-bros",
-  "version": "0.25.0",
-  "identifier": "com.github.tauriv2-vue-desktop-starter",
+  "version": "0.25.1",
+  "identifier": "com.github.koine-bros",
   "build": {
     "beforeDevCommand": "pnpm vite:dev",
     "devUrl": "http://localhost:1420",

@@ -28,7 +28,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![my_custom_command])
+        .invoke_handler(tauri::generate_handler![])
         .setup(|app| {
             // Create a custom titlebar for main window
             // On Windows this hides decoration and creates custom window controls
@@ -50,9 +50,4 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-#[tauri::command]
-fn my_custom_command() {
-    println!("I was invoked from JavaScript!");
 }

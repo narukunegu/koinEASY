@@ -54,7 +54,7 @@ function handleLanguageSelect(newLocale: string) {
       </p>
     </div>
     <Separator class="my-6" />
-    <div class="space-y-8">
+    <div class="space-y-8 pl-10">
       <div class="flex items-center space-x-2">
         <Label class="text-lg font-medium" for="theme-switch">{{
           t("settings.theme.label")
