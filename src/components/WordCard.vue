@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, useTemplateRef } from "vue";
 import { Separator } from "@/components/ui/separator";
+import { romanizeKoine } from "@/lib/romanize.ts";
 
 const { content } = defineProps(["content"]);
+const showHint = defineModel("showHint");
+
+const words = useTemplateRef("words");
 
 const filter = computed(() => {
   let text = "";
@@ -21,9 +25,23 @@ const filter = computed(() => {
       );
       end = meaning.indexOf(`</li>`, start);
     }
-    text += `<div class="mb-2">${meaning.substring(0, meaning.indexOf("<ul>"))}<ul class="pl-10">${res}</ul></div>`;
+    res = `<div class="mb-2">${meaning.substring(0, meaning.indexOf("<ul>"))}<ul class="pl-10">${res}</ul></div>`;
+    res = res.replace(/k="/g, `data-word="`);
+    res = res.replace(
+      `"lemma"`,
+      `"lemma" data-word="${res.substring(res.indexOf(`"lemma"`) + 8, res.indexOf(`</span>`))}"`,
+    );
+    text += res;
   });
   return text;
+});
+
+onMounted(() => {
+  words.value.addEventListener("mouseover", (event) => {
+    event.target.title = showHint.value
+      ? romanizeKoine(event.target.dataset.word || "")
+      : "";
+  });
 });
 </script>
 
@@ -33,7 +51,7 @@ const filter = computed(() => {
   >
     <div class="text-center text-2xl">{{ content.query }}</div>
     <Separator class="bg-foreground my-1" />
-    <div v-html="filter" />
+    <div ref="words" v-html="filter" />
   </div>
 </template>
 

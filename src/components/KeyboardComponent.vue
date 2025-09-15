@@ -61,6 +61,9 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
   const vKey: string = (isShifted.value ? key.shift : key.value) || "";
   if (key.special) {
     switch (key.value) {
+      case "enter":
+        output.value = "\n";
+        break;
       case "backspace":
         output.value = "";
         break;
@@ -111,9 +114,7 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
 // Function to handle physical keyboard input events
 function handlePhysicalKeyDown(event: KeyboardEvent) {
   if (
-    ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Enter"].includes(
-      event.code,
-    )
+    ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.code)
   ) {
     currentDiacritic.value = [];
     return;

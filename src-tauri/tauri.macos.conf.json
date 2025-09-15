@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "identifier": "com.github.koine-bros",
+  "identifier": "com.github.koineasy",
   "app": {
     "windows": [
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "koine-bros",
+        "title": "KoinEASY",
         "width": 1000,
         "height": 800,
         "titleBarStyle": "Overlay",

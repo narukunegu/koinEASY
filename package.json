@@ -1,9 +1,9 @@
 {
-  "name": "koine-bros",
+  "name": "KoinEASY",
   "type": "module",
-  "version": "0.25.0",
+  "version": "0.25.3",
   "private": true,
-  "packageManager": "pnpm@10.12.4",
+  "packageManager": "pnpm@10.16.1",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
@@ -49,6 +49,7 @@
     "eslint": "^9.34.0",
     "eslint-plugin-format": "^1.0.1",
     "jiti": "^2.5.1",
+    "naive-ui": "^2.43.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.4",
     "vue-tsc": "^3.0.6"

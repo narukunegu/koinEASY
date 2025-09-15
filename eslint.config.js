@@ -26,6 +26,8 @@ export default antfu(
       "style/brace-style": ["off"],
       "style/indent-binary-ops": ["off"],
       "style/arrow-parens": ["off"],
+      "perfectionist/sort-imports": ["off"],
+      "perfectionist/sort-named-imports": ["off"],
     },
   },
 );
