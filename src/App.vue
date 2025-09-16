@@ -30,7 +30,7 @@ watch(color, () => {
 </template>
 
 <style scoped>
-body {
-  font-family: "Gentium", sans-serif;
+:root {
+  font-family: GentiumW, sans-serif;
 }
 </style>

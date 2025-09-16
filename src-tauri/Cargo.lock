@@ -2536,7 +2536,7 @@ dependencies = [
 
 [[package]]
 name = "koineasy"
-version = "0.25.3"
+version = "1.25.0"
 dependencies = [
  "log",
  "serde_json",

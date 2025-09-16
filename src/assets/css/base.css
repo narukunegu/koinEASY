@@ -1,2 +1,3 @@
-@import './tailwind.css';
-@import './main.css';
+@import "./tailwind.css";
+@import "./main.css";
+@import "../gentium/web/Gentium-webfont.css";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NSwitch, NSpin, NVirtualList } from "naive-ui";
+import { NSwitch, NVirtualList, NCard, NSkeleton } from "naive-ui";
 import { onMounted, ref, useTemplateRef } from "vue";
 
 import KeyboardComponent from "@/components/KeyboardComponent.vue";
@@ -38,21 +38,24 @@ async function processText() {
   text.value = prefix.value + outputChar.value + suffix.value;
 }
 
-function handleOnTypeAnalyze() {
-  const newSet = [...new Set(text.value.split(" "))].filter(
+async function handleOnTypeAnalyze() {
+  const newSet = [...new Set(text.value.split(/[,.\s]+/))].filter(
     (item) => ![" ", "", "\n"].includes(item),
   );
   newSet.forEach(async (word, ind) => {
-    if (
-      !wordList.value[ind] ||
-      normalizeGreek(newSet[ind]) !== wordList.value[ind].query
-    ) {
+    if (!wordList.value[ind] || newSet[ind] !== wordList.value[ind].query) {
       isAnalyzing.value = true;
-      const req = await getWord(normalizeGreek(word));
       wordList.value[ind] = {
         index: ind,
-        query: normalizeGreek(word),
+        query: word,
+        isAnalyzing: true,
+      };
+      const req = await getWord(word);
+      wordList.value[ind] = {
+        index: ind,
+        query: word,
         result: req,
+        isAnalyzing: false,
       };
       isAnalyzing.value = false;
     }
@@ -63,7 +66,7 @@ async function handleOnType() {
   textArea.value!.focus();
   await processText();
   if ([" ", "\n"].includes(outputChar.value)) {
-    handleOnTypeAnalyze();
+    await handleOnTypeAnalyze();
   }
   textArea.value!.select();
   if (currentDiac.value.length > 0) {
@@ -88,16 +91,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-background flex h-full min-h-screen">
-    <div
-      id="app"
-      class="w-2/3 m-1 p-4 rounded-lg border-2 border-border h-[94vh]"
-    >
+  <div class="flex min-h-screen">
+    <div id="app" class="w-2/3 m-1 p-4">
       <!-- Textarea for output -->
       <textarea
         ref="textArea"
         v-model="text"
-        :disabled="isAnalyzing"
         class="w-full h-[30vh] bg-secondary p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-2xl resize-none mb-6"
         placeholder="Type [Space] or [Enter] to analyze on typing..."
       />
@@ -111,24 +110,25 @@ onMounted(() => {
     <!-- Result list -->
     <div class="w-1/3 h-[88vh] text-xl m-1 rounded-lg">
       <NSwitch v-model:value="showHint" class="my-2" size="large">
-        <template #checked> Show Romans </template>
-        <template #unchecked> Hide Romans </template>
+        <template #checked>Show Romans</template>
+        <template #unchecked>Hide Romans</template>
       </NSwitch>
-      <NVirtualList
-        v-if="!isAnalyzing"
-        :item-size="60"
-        :items="wordList"
-        item-resizable
-      >
+      <NVirtualList :item-size="120" :items="wordList" item-resizable>
         <template #default="{ item }">
-          <WordCard
+          <NCard
             :key="item.index"
-            v-model:show-hint="showHint"
-            :content="item"
-          />
+            :title="item.query"
+            :segmented="{ content: true }"
+            class="mb-2"
+            header-style="font-size: 22px; text-align: center;"
+            size="medium"
+            hoverable
+          >
+            <NSkeleton v-if="item.isAnalyzing" text :repeat="3" />
+            <WordCard v-else v-model:show-hint="showHint" :content="item" />
+          </NCard>
         </template>
       </NVirtualList>
-      <NSpin :show="isAnalyzing" size="medium">...</NSpin>
     </div>
   </div>
 </template>

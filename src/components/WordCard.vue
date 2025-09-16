@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, useTemplateRef } from "vue";
-import { Separator } from "@/components/ui/separator";
 import { romanizeKoine } from "@/lib/romanize.ts";
+import normalizeGreek from "@/lib/normalize.ts";
 
 const { content } = defineProps(["content"]);
 const showHint = defineModel("showHint");
@@ -10,19 +10,17 @@ const words = useTemplateRef("words");
 
 const filter = computed(() => {
   let text = "";
+  const queryG = normalizeGreek(content.query);
+
   content.result.forEach((word: any) => {
     const meaning = word.m || "";
-    let start = meaning.indexOf(
-      `<li class="morph-grc-li" k="${content.query}"`,
-    );
+
+    let start = meaning.indexOf(`<li class="morph-grc-li" k="${queryG}"`);
     let end = meaning.indexOf(`</li>`, start);
     let res = "";
     while (start !== -1) {
       res += meaning.substring(start, end + 5);
-      start = meaning.indexOf(
-        `<li class="morph-grc-li" k="${content.query}"`,
-        end,
-      );
+      start = meaning.indexOf(`<li class="morph-grc-li" k="${queryG}"`, end);
       end = meaning.indexOf(`</li>`, start);
     }
     res = `<div class="mb-2">${meaning.substring(0, meaning.indexOf("<ul>"))}<ul class="pl-10">${res}</ul></div>`;
@@ -46,18 +44,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="bg-secondary block rounded-xl border-1 dark:border-foreground hover:border-blue-500 m-2 px-4 py-2"
-  >
-    <div class="text-center text-2xl">{{ content.query }}</div>
-    <Separator class="bg-foreground my-1" />
-    <div ref="words" v-html="filter" />
-  </div>
+  <div ref="words" class="text-xl" v-html="filter" />
 </template>
 
 <style>
 span.lemma {
-  font-family: "Gentium-Bold";
   font-weight: bold;
 }
 span.tr-lang {
