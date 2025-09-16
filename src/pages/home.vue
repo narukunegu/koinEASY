@@ -42,17 +42,19 @@ async function handleOnTypeAnalyze() {
   const newSet = [...new Set(text.value.split(/[,.\s]+/))].filter(
     (item) => ![" ", "", "\n"].includes(item),
   );
+  const listLength = newSet.length;
   newSet.forEach(async (word, ind) => {
-    if (!wordList.value[ind] || newSet[ind] !== wordList.value[ind].query) {
+    const fWord = wordList.value.find((w) => w?.query === word);
+    if (fWord) {
+      wordList.value[listLength - ind - 1] = { ...fWord };
+    } else {
       isAnalyzing.value = true;
-      wordList.value[ind] = {
-        index: ind,
+      wordList.value[listLength - ind - 1] = {
         query: word,
         isAnalyzing: true,
       };
       const req = await getWord(word);
-      wordList.value[ind] = {
-        index: ind,
+      wordList.value[listLength - ind - 1] = {
         query: word,
         result: req,
         isAnalyzing: false,
@@ -113,10 +115,10 @@ onMounted(() => {
         <template #checked>Show Romans</template>
         <template #unchecked>Hide Romans</template>
       </NSwitch>
-      <NVirtualList :item-size="120" :items="wordList" item-resizable>
+      <NVirtualList :item-size="60" :items="wordList" item-resizable>
         <template #default="{ item }">
           <NCard
-            :key="item.index"
+            :key="item.query"
             :title="item.query"
             :segmented="{ content: true }"
             class="mb-2"
