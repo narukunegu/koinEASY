@@ -13,9 +13,10 @@ const { t } = useI18n();
 const sidebarRoutes = [
   {
     name: "home.label",
-    icon: "ph:house-duotone",
+    icon: "hugeicons:alpha-square",
     path: "/home",
   },
+  // { name: "fun.label", icon: "ph:chat", path: "/fun" },
 ];
 </script>
 
@@ -41,7 +42,7 @@ const sidebarRoutes = [
         </TooltipContent>
       </Tooltip>
     </nav>
-    <div class="">
+    <div class="grid grid-cols-1">
       <Tooltip>
         <TooltipTrigger as-child>
           <RouterLink to="/settings">
@@ -59,6 +60,22 @@ const sidebarRoutes = [
         <TooltipContent side="right" :side-offset="5">
           {{ t("settings.label") }}
         </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <RouterLink to="/about">
+            <Button
+              variant="ghost"
+              size="icon"
+              :class="'/about' === $route.path ? 'bg-muted' : ''"
+              class="mt-auto rounded-lg"
+              aria-label="About"
+            >
+              <Icon icon="ix:about" class="size-5" />
+            </Button>
+          </RouterLink>
+        </TooltipTrigger>
+        <TooltipContent side="right" :side-offset="5"> About </TooltipContent>
       </Tooltip>
     </div>
   </aside>

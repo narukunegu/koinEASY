@@ -51,6 +51,7 @@ function getKeyClass(key: KeyType) {
 
 function isSpecialKeyActive(key: KeyType) {
   return (
+    key.isActive ||
     (key.value === "shift" && isShifted.value) ||
     (key.value === "caps" && isCapsLocked.value)
   );
@@ -113,18 +114,13 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
 
 // Function to handle physical keyboard input events
 function handlePhysicalKeyDown(event: KeyboardEvent) {
-  if (
-    ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.code)
-  ) {
-    currentDiacritic.value = [];
-    return;
-  }
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
   if (event.shiftKey) {
     isShifted.value = true;
-    if (!event.key) {
+
+    if (event.key === "Shift") {
       return;
     }
   }
@@ -142,8 +138,11 @@ function handlePhysicalKeyDown(event: KeyboardEvent) {
       virtualKey ||
       keyboardLayout.value.flat().find((k) => k.shift === charToType);
     if (virtualKey) {
+      virtualKey.isActive = true;
       handleKeyPress(virtualKey, false);
     }
+  } else {
+    currentDiacritic.value = [];
   }
 }
 
@@ -151,6 +150,12 @@ function handlePhysicalKeyUp(event: KeyboardEvent) {
   const keyCode = event.code;
   if (keyCode === "ShiftLeft" || keyCode === "ShiftRight") {
     isShifted.value = false;
+  } else {
+    keyboardLayout.value.flat().forEach((key) => {
+      if (key.isActive) {
+        key.isActive = false;
+      }
+    });
   }
 }
 
@@ -168,10 +173,7 @@ onUnmounted(() => {
 
 <template>
   <!-- Virtual Keyboard -->
-  <div
-    id="virtual-keyboard"
-    class="bg-gray-200 p-4 rounded-lg shadow-inner mt-6"
-  >
+  <div id="virtual-keyboard" class="bg-gray-200 p-4 rounded-lg shadow-inner">
     <div
       v-for="(row, rowIndex) in keyboardLayout"
       :key="rowIndex"
@@ -202,7 +204,7 @@ onUnmounted(() => {
   transform: scale(0.95);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-.key-special.active {
+.active {
   background-color: #3b82f6; /* blue-500 */
   color: white;
 }

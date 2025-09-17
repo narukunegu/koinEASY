@@ -61,4 +61,5 @@ export interface KeyType {
   sub?: string;
   hasDiacritic?: boolean;
   isDiacritic?: boolean;
+  isActive?: boolean;
 }
