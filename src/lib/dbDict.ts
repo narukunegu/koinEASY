@@ -1,9 +1,7 @@
-import { resolveResource } from "@tauri-apps/api/path";
 import normalizeGreek from "./normalize";
 import Database from "@tauri-apps/plugin-sql";
 
-const dbPath = await resolveResource("resources/greek-mor.db");
-const db = await Database.load(`sqlite:${dbPath}`);
+const db = await Database.load("sqlite:greek-mor.db");
 
 export async function getWord(query: string) {
   const nQuery = normalizeGreek(query);
