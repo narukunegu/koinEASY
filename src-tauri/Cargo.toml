@@ -1,8 +1,8 @@
 [package]
 name = "koineasy"
-version = "1.25.1"
-description = "Koine Greek Virtual Keyboard & Simple Analysis"
-authors = [ "jos" ]
+version = "1.25.2"
+description = "Koine Greek Studying Application."
+authors = [ "jos.guen" ]
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
