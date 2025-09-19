@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { NDivider } from "naive-ui";
 
 import { getLanguageLabel, supportedLanguages } from "@/lib/config";
 import { useSettingsStore } from "@/stores/settings";
@@ -49,11 +49,11 @@ function handleLanguageSelect(newLocale: string) {
       <h2 class="text-2xl font-bold tracking-tight">
         {{ t("settings.label") }}
       </h2>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground text-xl">
         {{ t("settings.description") }}
       </p>
     </div>
-    <Separator class="my-6" />
+    <NDivider class="my-6" />
     <div class="space-y-8 pl-10">
       <div class="flex items-center space-x-2">
         <Label class="text-lg font-medium" for="theme-switch">{{

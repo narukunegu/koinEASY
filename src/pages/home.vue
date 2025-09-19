@@ -5,7 +5,7 @@ import { ref } from "vue";
 import GreekInput from "@/components/GreekInput.vue";
 import WordCard from "@/components/WordCard.vue";
 
-import { getWord } from "@/lib/db.ts";
+import { getWord } from "@/lib/dbDict";
 
 // Reactive state for the input and keyboard modifiers
 const text = ref("");
@@ -49,6 +49,7 @@ async function handleOnTypeAnalyze() {
         :auto-hide="false"
         input-style="h-[30vh] p-4 text-2xl"
         input-placeholder="Press [Space] or [Enter] to analyze on typing..."
+        :show-footer="false"
         @on-entered="handleOnTypeAnalyze"
         @on-spaced="handleOnTypeAnalyze"
       />

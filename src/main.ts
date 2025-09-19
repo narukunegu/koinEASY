@@ -37,4 +37,9 @@ async function initAppSettings() {
   if (language) {
     i18n.global.locale.value = language;
   }
+
+  const keyboard = (await settingsStore.getSetting("keyboard")) as boolean;
+  if (keyboard === undefined) {
+    settingsStore.setSetting("keyboard", true);
+  }
 }
