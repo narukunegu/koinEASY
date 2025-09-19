@@ -5,7 +5,7 @@ import { diacriticsMap } from "@/lib/diacriticsMap.ts";
 import { keyboardLayout } from "@/lib/keyboardLayout.ts";
 import { diacriticsKey, physicalKeyMap } from "@/lib/keyMap.ts";
 
-const emit = defineEmits(["onTyped"]);
+const emit = defineEmits(["onTyped", "onBackTyped"]);
 
 // Reactive state for the input and keyboard modifiers
 const output = defineModel<string>("output");
@@ -67,6 +67,7 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
         break;
       case "backspace":
         output.value = "";
+        emit("onBackTyped");
         break;
       case "shift":
         isShifted.value = !isShifted.value;

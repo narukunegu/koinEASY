@@ -34,17 +34,15 @@ const filter = computed(() => {
   return text;
 });
 
-onMounted(() => {
-  words.value.addEventListener("mouseover", (event) => {
-    event.target.title = showHint.value
-      ? romanizeKoine(event.target.dataset.word || "")
-      : "";
-  });
-});
+function handleMouseover(event: MouseEvent) {
+  event.target.title = showHint.value
+    ? romanizeKoine(event.target.dataset.word || "")
+    : "";
+}
 </script>
 
 <template>
-  <div ref="words" class="text-xl" v-html="filter" />
+  <div class="text-xl" @mouseover="handleMouseover" v-html="filter" />
 </template>
 
 <style>
