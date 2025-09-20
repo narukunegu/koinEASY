@@ -79,7 +79,7 @@ pub fn run() {
                 main_window.make_transparent().unwrap();
             }
 
-            let dst_path = "com.github.koineasy/greek-mor.db";
+            let dst_path = "./com.github.koineasy/greek-mor.db";
             #[cfg(mobile)]
             let dst_path = "greek-mor.db";
 
@@ -127,5 +127,6 @@ where
         //sent += l;
         d_f.write_all(&buf[..l])?;
     }
+
     Ok(dst_path)
 }

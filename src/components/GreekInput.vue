@@ -105,6 +105,9 @@ function handleSelectChange() {
 
 onMounted(async () => {
   onKeyboard.value = await settingsStore.getSetting("keyboard");
+  textareaRef.value!.addEventListener("selectionchange", () => {
+    handleSelectChange();
+  });
 });
 </script>
 
@@ -121,7 +124,6 @@ onMounted(async () => {
         @focus="showKeyboard = onKeyboard"
         @blur="showKeyboard = !autoHide && onKeyboard"
         @keyup="handleKeyup"
-        @select="handleSelectChange"
       />
       <div v-if="showFooter" class="absolute bottom-4 flex justify-end w-full">
         <button

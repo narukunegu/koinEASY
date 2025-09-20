@@ -1,8 +1,8 @@
 [package]
 name = "koineasy"
-version = "1.25.2"
+version = "1.25.3"
 description = "Koine Greek Studying Application."
-authors = [ "jos.guen" ]
+authors = ["jos.guen"]
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -12,11 +12,7 @@ edition = "2024"
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "koineasy_lib"
-crate-type = [
-  "staticlib",
-  "cdylib",
-  "rlib"
-]
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.4.1", features = [] }
@@ -44,7 +40,7 @@ incremental = true # Compile your binary in smaller steps.
 # https://tauri.app/concept/size/
 [profile.release]
 codegen-units = 1 # Allows LLVM to perform better optimization.
-lto = true # Enables link-time-optimizations.
-opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
-panic = "abort" # Higher performance by disabling panic handlers.
-strip = true # Ensures debug symbols are removed.
+lto = true        # Enables link-time-optimizations.
+opt-level = "s"   # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort"   # Higher performance by disabling panic handlers.
+strip = true      # Ensures debug symbols are removed.

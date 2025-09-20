@@ -83,7 +83,9 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
         output.value = "\t";
         break;
     }
-    currentDiacritic.value = [];
+    if (key.value !== "shift") {
+      currentDiacritic.value = [];
+    }
   } else if (currentDiacritic.value!.length > 0 && diacriticsKey[vKey]) {
     currentDiacritic.value!.push(diacriticsKey[vKey] as string);
     const combined = Object.entries(diacriticsMap).find(([...v]) => {

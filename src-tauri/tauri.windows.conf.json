@@ -15,5 +15,10 @@
         "hiddenTitle": true
       }
     ]
+  },
+  "plugins": {
+    "sql": {
+      "preload": ["sqlite:chats.db"]
+    }
   }
 }
