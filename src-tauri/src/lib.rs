@@ -21,7 +21,7 @@ pub fn run() {
         Migration {
             version: 1,
             description: "create_initial_tables",
-            sql: "CREATE TABLE chats (id INTEGER PRIMARY KEY, title TEXT, messages TEXT);",
+            sql: "CREATE TABLE chats (id INTEGER PRIMARY KEY, title TEXT, messages TEXT, words TEXT);",
             kind: MigrationKind::Up,
         },
     ];
@@ -29,7 +29,7 @@ pub fn run() {
     let mut builder = tauri::Builder::default()
         .plugin(
             tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:chats.db", migrations)
+                .add_migrations("sqlite:user.db", migrations)
                 .build(),
         )
         .plugin(tauri_plugin_fs::init());

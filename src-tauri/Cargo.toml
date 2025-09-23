@@ -1,6 +1,6 @@
 [package]
 name = "koineasy"
-version = "1.25.3"
+version = "1.25.4"
 description = "Koine Greek Studying Application."
 authors = ["jos.guen"]
 edition = "2024"

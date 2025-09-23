@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef } from "vue";
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from "vue";
 import { NSwitch } from "naive-ui";
 import { useSettingsStore } from "@/stores/settings";
 
@@ -14,6 +14,7 @@ const { autoHide, inputLimit, inputStyle, inputPlaceholder, showFooter } =
     "inputLimit",
     "inputStyle",
     "inputPlaceholder",
+    "offKeyboard",
     "showFooter",
   ]);
 const emit = defineEmits(["onEntered", "onSpaced"]);
@@ -58,18 +59,24 @@ async function handleOnType() {
   if (wordCounter.value >= (inputLimit || 30)) {
     return;
   }
-  textareaRef.value!.focus();
+  // textareaRef.value!.focus();
+
   await processText();
-  if (outputChar.value === "\n") {
-    emit("onEntered");
-  } else if (outputChar.value === " ") {
-    emit("onSpaced");
-  }
+
   textareaRef.value!.select();
   if (currentDiac.value.length > 0) {
     textareaRef.value!.setSelectionRange(pos.value - 1, pos.value);
   } else {
     textareaRef.value!.setSelectionRange(pos.value, pos.value);
+  }
+
+  if (outputChar.value === "\n") {
+    if (autoHide) {
+      textareaRef.value.blur();
+    }
+    emit("onEntered");
+  } else if (outputChar.value === " ") {
+    emit("onSpaced");
   }
 }
 
@@ -78,6 +85,9 @@ function handleOnBack() {
 }
 
 function handleKeyup(event: KeyboardEvent) {
+  if (event.key === "Escape") {
+    textareaRef.value.blur();
+  }
   if (!onKeyboard.value) {
     if (event.key === "Enter") {
       emit("onEntered");
@@ -103,11 +113,24 @@ function handleSelectChange() {
   );
 }
 
+function handleKeypressEvent(event: KeyboardEvent) {
+  if (!showKeyboard.value && event.shiftKey && event.key === " ") {
+    event.preventDefault();
+    textareaRef.value.focus();
+    // showKeyboard.value = onKeyboard.value;
+  }
+}
+
 onMounted(async () => {
   onKeyboard.value = await settingsStore.getSetting("keyboard");
   textareaRef.value!.addEventListener("selectionchange", () => {
     handleSelectChange();
   });
+  window.addEventListener("keypress", handleKeypressEvent);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keypress", handleKeypressEvent);
 });
 </script>
 
@@ -158,7 +181,7 @@ onMounted(async () => {
         v-model:value="onKeyboard"
         class="align-right"
         size="medium"
-        @change="handleKeyboardMode"
+        @update-value="handleKeyboardMode"
       >
         <template #checked> Keyboard On </template>
         <template #unchecked> Keyboard Off </template>

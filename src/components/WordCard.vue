@@ -6,24 +6,11 @@ import normalizeGreek from "@/lib/normalize.ts";
 const { content } = defineProps(["content"]);
 const showHint = defineModel("showHint");
 
-const words = useTemplateRef("words");
-
 const filter = computed(() => {
   let text = "";
-  const queryG = normalizeGreek(content.query);
 
-  content.result.forEach((word: any) => {
-    const meaning = word.m || "";
-
-    let start = meaning.indexOf(`<li class="morph-grc-li" k="${queryG}"`);
-    let end = meaning.indexOf(`</li>`, start);
-    let res = "";
-    while (start !== -1) {
-      res += meaning.substring(start, end + 5);
-      start = meaning.indexOf(`<li class="morph-grc-li" k="${queryG}"`, end);
-      end = meaning.indexOf(`</li>`, start);
-    }
-    res = `<div class="mb-2">${meaning.substring(0, meaning.indexOf("<ul>"))}<ul class="pl-10">${res}</ul></div>`;
+  content.result.forEach((word: string) => {
+    let res = word;
     res = res.replace(/k="/g, `data-word="`);
     res = res.replace(
       `"lemma"`,

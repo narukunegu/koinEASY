@@ -3,12 +3,12 @@ import { createMemoryHistory, createRouter } from "vue-router";
 const routes = [
   {
     path: "/",
-    redirect: "/home",
+    redirect: "/fast",
     children: [
       {
-        path: "home",
-        name: "home",
-        component: () => import("@/pages/home.vue"),
+        path: "fast",
+        name: "fast",
+        component: () => import("@/pages/fast.vue"),
       },
       { path: "fun", name: "fun", component: () => import("@/pages/fun.vue") },
       {

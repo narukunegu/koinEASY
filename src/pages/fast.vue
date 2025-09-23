@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { NSwitch, NVirtualList, NCard, NSkeleton } from "naive-ui";
+import { NButton, NSwitch, NVirtualList, NCard, NSkeleton } from "naive-ui";
 import { ref } from "vue";
 
 import GreekInput from "@/components/GreekInput.vue";
 import WordCard from "@/components/WordCard.vue";
 
-import { getWord } from "@/lib/dbDict";
+import { analyzeWord, parseWordList } from "@/lib/data";
 
 // Reactive state for the input and keyboard modifiers
 const text = ref("");
@@ -14,29 +14,23 @@ const isAnalyzing = ref(false);
 const showHint = ref(false);
 
 async function handleOnTypeAnalyze() {
-  const newSet = [...new Set(text.value.split(/[,.\s]+/))].filter(
-    (item) => ![" ", "", "\n"].includes(item),
-  );
-  const listLength = newSet.length;
-  newSet.forEach(async (word, ind) => {
-    const fWord = wordList.value.find((w) => w?.query === word);
-    if (fWord) {
-      wordList.value[listLength - ind - 1] = { ...fWord };
-    } else {
-      isAnalyzing.value = true;
-      wordList.value[listLength - ind - 1] = {
-        query: word,
+  const newSet = parseWordList(text.value);
+  isAnalyzing.value = true;
+  for (let i = 0; i < newSet.length; i++) {
+    if (!wordList.value.find((w) => w.query === newSet[i])) {
+      wordList.value.unshift({
+        query: newSet[i],
         isAnalyzing: true,
-      };
-      const req = await getWord(word);
-      wordList.value[listLength - ind - 1] = {
-        query: word,
+      });
+      const req = await analyzeWord(newSet[i]);
+      wordList.value[0] = {
+        query: newSet[i],
         result: req,
         isAnalyzing: false,
       };
-      isAnalyzing.value = false;
     }
-  });
+  }
+  isAnalyzing.value = false;
 }
 </script>
 
@@ -56,10 +50,27 @@ async function handleOnTypeAnalyze() {
     </div>
     <!-- Result list -->
     <div class="w-1/3 h-[88vh] text-xl m-1 rounded-lg">
-      <div class="flex justify-end items-center mr-2 my-2">
+      <div class="flex justify-between items-center mr-2 my-2">
+        <NButton size="small" round type="primary" @click="wordList = []">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4m-4 4a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"
+            />
+          </svg>
+        </NButton>
         <NSwitch v-model:value="showHint" size="large">
-          <template #checked>Show Romans</template>
-          <template #unchecked>Hide Romans</template>
+          <template #checked> Show Romans </template>
+          <template #unchecked> Hide Romans </template>
         </NSwitch>
       </div>
       <NVirtualList :item-size="30" :items="wordList" item-resizable>

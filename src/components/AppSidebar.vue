@@ -12,11 +12,11 @@ const { t } = useI18n();
 
 const sidebarRoutes = [
   {
-    name: "home.label",
-    icon: "hugeicons:alpha-square",
-    path: "/home",
+    name: "fast.label",
+    icon: "akar-icons:thunder",
+    path: "/fast",
   },
-  // { name: "fun.label", icon: "ph:chat", path: "/fun" },
+  { name: "fun.label", icon: "ph:chat", path: "/fun" },
 ];
 </script>
 

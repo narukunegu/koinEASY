@@ -1,6 +1,11 @@
 import Database from "@tauri-apps/plugin-sql";
 
-const db = await Database.load("sqlite:chats.db");
+const db = await Database.load("sqlite:user.db");
+
+export interface MessageType {
+  type: "request" | "response";
+  content: string;
+}
 
 export async function getChat(id: number) {
   const res: any[] = await db.select("SELECT * FROM chats WHERE id = $1", [id]);
@@ -8,18 +13,20 @@ export async function getChat(id: number) {
 }
 
 export async function postChat(chat: any) {
-  const chatId = Math.round(Math.random() * 100000);
-  await db.execute(
-    "INSERT INTO chats (id, title, messages) VALUES ($1, $2, $3)",
-    [chatId, chat.title, chat.messages],
+  const chatId = await db.execute(
+    "INSERT INTO chats (title, messages) VALUES ($1, $2)",
+    [chat.title, JSON.stringify(chat.messages)],
   );
-  return chatId;
+  return chatId.lastInsertId;
 }
 
-export async function updateChat(chat: any) {
+export async function updateChat(request: any) {
+  const chat = await getChat(request.chatId);
+  const newMessages = JSON.parse(chat.messages).push(request.message);
+  const newWords = JSON.parse(chat.words).push(request.word);
   return await db.execute(
-    "UPDATE chats SET title = $1, messages = $2 WHERE id = $3",
-    [chat.title, chat.messages, chat.id],
+    "UPDATE chats SET messages = $1, words = $2 WHERE id = $3",
+    [JSON.stringify(newMessages), JSON.stringify(newWords), request.chatId],
   );
 }
 
@@ -30,7 +37,10 @@ export async function deleteChat(chatId: number) {
 export async function getTitles() {
   const res: any[] = await db.select("SELECT id, title FROM chats");
   if (res.length === 0) {
-    let initChat: any = { title: "untitled", messages: "" };
+    let initChat: any = {
+      title: "untitled",
+      messages: [{ type: "response", content: "Χαῖρε!" }],
+    };
     const newId = await postChat(initChat);
     initChat = { id: newId, ...initChat };
     res.push(initChat);
