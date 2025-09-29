@@ -28,6 +28,7 @@ export default antfu(
       "style/arrow-parens": ["off"],
       "perfectionist/sort-imports": ["off"],
       "perfectionist/sort-named-imports": ["off"],
+      "vue/operator-linebreak": ["off"],
     },
   },
 );

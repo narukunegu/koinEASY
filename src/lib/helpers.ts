@@ -1,3 +1,15 @@
+export function normalizeGreek(s: string) {
+  if (!s) {
+    return "";
+  }
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036F]/g, "") // strip accents/breathings
+    .replace(/[;:,.]/g, "")
+    .trim();
+}
+
 /**
  * Romanizes a Koine Greek word according to a common academic standard.
  * - Handles diphthongs and special consonant combinations (e.g., γγ -> ng).

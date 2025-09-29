@@ -1,96 +1,230 @@
 <script setup lang="ts">
-import type { VirtualListInst } from "naive-ui";
-import {
-  NButton,
-  NInput,
-  NList,
-  NListItem,
-  NSpace,
-  NSpin,
-  NVirtualList,
-} from "naive-ui";
+import { useScroll } from "@vueuse/core";
+import { NButton, NInput, NList, NListItem, NSpace } from "naive-ui";
 import GreekInput from "@/components/GreekInput.vue";
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
 import type { MessageType } from "@/lib/dbChats";
 import {
   deleteChat,
-  getChat,
+  getMessages,
   getTitles,
-  postChat,
+  getWords,
+  newChat,
+  getChat,
   updateChat,
   updateTitle,
 } from "@/lib/dbChats";
-import { parseWordList, analyzeWord } from "@/lib/data";
+import {
+  analyzeWord,
+  parseLemma,
+  parseQuiz,
+  parseTableMorph,
+  parseWordList,
+  parseWordData,
+} from "@/lib/words";
 
+const loadingItem = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"> <circle cx="18" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin=".67" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> <circle cx="12" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin=".33" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> <circle cx="6" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin="0" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> </svg>`;
+const listRef = useTemplateRef<HTMLElement>("listRef");
+const { y, arrivedState } = useScroll(listRef);
 const request = ref("");
 const messages = ref<MessageType[]>([]);
+const words = ref<any[]>([]);
+const lemmas = ref<string[]>();
 const titleList = ref<any[]>([]);
 const edittingId = ref<number>(null);
-const isLoading = ref(true);
-const listRef = ref<VirtualListInst>();
+const isLoadingChat = ref(false);
+const isLoadingMessages = ref(false);
 const currentId = ref(null);
+const quizMode = ref<boolean>(false);
+const questions = ref<any[]>();
+const nQuest = ref<number>();
+const currQuestIndex = ref<number>(0);
+const correctCount = ref<number>(0);
+const currentPage = ref<number>(0);
+const offsetPage = 20;
 
-const computedMessages = computed(() => {
-  return messages.value.slice(-20);
+const maxPage = computed(() => {
+  return Math.floor(messages.value.length / offsetPage);
+});
+const paginatedMessages = computed(() => {
+  if (currentPage.value === maxPage.value) {
+    return messages.value.slice(-offsetPage);
+  }
+  return messages.value.slice(
+    currentPage.value * offsetPage,
+    (currentPage.value + 1) * offsetPage - 1,
+  );
 });
 
-async function handleRequest() {
-  messages.value.push({ type: "request", content: request.value });
-  const wordList = parseWordList(request.value);
+function scrollToBottom() {
+  if (currentPage.value !== maxPage.value) {
+    return;
+  }
+  nextTick(() => {
+    y.value = listRef.value.scrollHeight;
+  });
+}
+
+watch(currentPage, () => {
+  if (currentPage.value === maxPage.value) {
+    nextTick(() => {
+      y.value = listRef.value.scrollHeight;
+    });
+  }
+});
+
+function pushResponse(content: string) {
+  messages.value.push({ type: "response", content });
+  scrollToBottom();
+  currentPage.value = maxPage.value;
+}
+
+function pushRequest(content: string) {
+  messages.value.push({ type: "request", content });
   request.value = "";
+}
+
+async function handleRequest() {
+  const wordList = parseWordList(request.value);
+  // handle quiz mode
+  if (quizMode.value) {
+    // check answer
+    pushRequest(request.value);
+    const answer = questions.value[currQuestIndex.value].answer;
+    if (answer.includes(wordList[0])) {
+      pushResponse("<i>Your answer is correct!</i>");
+      correctCount.value++;
+    } else {
+      pushResponse(
+        `<p><i>Your answer is incorrect!</i></p><p>The correct answer is <strong>${answer.join("/")}</strong>.</p>`,
+      );
+    }
+    // push new question
+    currQuestIndex.value++;
+    if (currQuestIndex.value < nQuest.value) {
+      pushResponse(
+        `<p>Question ${currQuestIndex.value + 1}.</p>${questions.value[currQuestIndex.value].question}<p><i>Waiting for answer.</i></p>`,
+      );
+    } else {
+      pushResponse(
+        `<p><i>The quiz has finished.</i></p><p>Your correct rating is ${Math.floor((correctCount.value / nQuest.value) * 100)}%.</p>`,
+      );
+      quizMode.value = false;
+    }
+    return;
+  }
+
+  let content = "";
+  let res: any;
 
   const command = wordList.shift();
   switch (command) {
     case "/sentence":
       break;
 
+    case "/words":
+      pushRequest(`<span class="font-extrabold underline">/words</span>`);
+      content = `<p><strong>Collected words: ${words.value.length}</strong></p>`;
+      content += `<p>${words.value.map((w) => w.lemma).join("; ")}</p>`;
+      pushResponse(content);
+      break;
+    case "/morph":
+      pushRequest(
+        `<span class="font-extrabold underline pr-2">/morph</span><span>${wordList[0]}</span>`,
+      );
+      res = words.value.find((w) => w.lemma === wordList[0]);
+      if (res) {
+        const tables = parseTableMorph(res.lemma, res.extras);
+        tables.forEach((table) => {
+          pushResponse(table);
+        });
+      } else {
+        pushResponse(`No result for ${wordList[0]}.`);
+      }
+      break;
+    case "/quiz":
+      pushRequest(
+        `<span class="font-extrabold underline mr-2">/quiz</span><span>${wordList.join(" ")}</span>`,
+      );
+      nQuest.value = Number.parseInt(wordList[0]);
+      if (!Number.isInteger(nQuest.value) || nQuest.value > 100) {
+        pushResponse("Error command!");
+      } else {
+        pushResponse(loadingItem);
+        questions.value = await parseQuiz(nQuest.value, words.value);
+        messages.value.pop();
+        if (!questions.value) {
+          pushResponse("Can't genarate questions!");
+        } else {
+          quizMode.value = true;
+          currQuestIndex.value = 0;
+          correctCount.value = 0;
+          pushResponse(
+            `<p>Question 1.</p>${questions.value[0].question}<p><i>Waiting for answer.</i></p>`,
+          );
+        }
+      }
+      break;
     default:
       wordList.unshift(command);
+      pushRequest(request.value);
       for (let i = 0; i < wordList.length; i++) {
-        isLoading.value = true;
-        await analyzeWord(wordList[i]).then((words) => {
-          words.forEach((w) =>
-            messages.value.push({ type: "response", content: w }),
-          );
-          if (words.length === 0) {
-            messages.value.push({
-              type: "response",
-              content: `No result for <strong>${wordList[i]}</strong>`,
-            });
+        pushResponse(loadingItem);
+        await analyzeWord(wordList[i]).then((data) => {
+          messages.value.pop();
+          data.forEach((content) => pushResponse(content));
+          if (data.length === 0) {
+            pushResponse(`No result for <strong>${wordList[i]}</strong>`);
           }
-          isLoading.value = false;
         });
       }
       break;
   }
 }
 
+function isCollectable(item: MessageType) {
+  return (
+    item.type === "response" &&
+    item.content.includes(`class="lemma"`) &&
+    !lemmas.value.includes(parseLemma(item.content))
+  );
+}
+
 async function handleCollect(message: any) {
-  await updateChat({
-    chatId: currentId.value,
-    message: message.content,
-    word: message,
-  });
+  const lemma = parseLemma(message.content);
+  const word = await parseWordData(lemma);
+  if (lemmas.value.includes(lemma)) {
+    pushRequest(`<i><strong>${lemma}</strong> has already existed.</i>`);
+  } else {
+    await updateChat({
+      chatId: currentId.value,
+      word,
+    }).then(() => {
+      words.value.push(word);
+      lemmas.value.push(lemma);
+      pushResponse(
+        `<i><strong>${lemma}</strong> is collected successfully.</i>`,
+      );
+    });
+  }
 }
 
 async function loadChat(chatId: number) {
-  isLoading.value = true;
+  isLoadingChat.value = true;
+  currentId.value = chatId;
+  quizMode.value = false;
   await getChat(chatId).then((data) => {
     messages.value = JSON.parse(data.messages);
-    isLoading.value = false;
-    currentId.value = chatId;
+    words.value = JSON.parse(data.words);
+    lemmas.value = words.value.map((w) => w.lemma);
+    isLoadingChat.value = false;
   });
 }
 
 async function handleAddChat() {
-  const newChat = {
-    title: "untitled",
-    messages: [{ type: "response", content: "Χαῖρε!" }],
-    words: [],
-  };
-  const newId = await postChat(newChat);
-  titleList.value.unshift({ id: newId, ...newChat });
+  const newId = await newChat();
+  titleList.value.unshift({ id: newId, title: "untitled" });
   await loadChat(newId);
 }
 
@@ -104,15 +238,15 @@ async function renameChat(chat: any) {
 
 async function removeChat(chat: any) {
   // delete
-  if (titleList.value.length === 0) {
+  if (titleList.value.length <= 1) {
     return;
   }
   const ind = titleList.value.indexOf(chat);
   if (chat.id === currentId.value) {
     await loadChat(titleList.value[ind !== 0 ? 0 : 1].id);
   }
-  titleList.value.splice(ind, 1);
   await deleteChat(chat.id);
+  titleList.value.splice(ind, 1);
 }
 
 function handleRename(chatId: number) {
@@ -131,11 +265,11 @@ onMounted(async () => {
 
 <template>
   <div class="h-[95vh] w-[95vw] flex">
-    <div class="w-1/5 border-2">
+    <div class="w-1/5 border-1">
       <NList clickable hoverable>
         <template #header>
-          <div class="flex">
-            <div class="flex-1 text-xl font-medium">Chats</div>
+          <div class="flex justify-between">
+            <div class="text-xl font-bold">Chats</div>
             <NButton size="small" round @click="handleAddChat">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -153,8 +287,8 @@ onMounted(async () => {
         <NListItem
           v-for="chat in titleList"
           :key="chat.id"
+          class="items-center text-lg"
           :class="{ 'bg-gray-500': chat.id === currentId }"
-          @click="loadChat(chat.id)"
         >
           <template #suffix>
             <NSpace :wrap="false" align="center" justify="end" size="small">
@@ -196,9 +330,11 @@ onMounted(async () => {
           />
           <div
             v-else
+            class="h-8 flex items-center"
             :class="{
               'text-white font-bold': currentId === chat.id,
             }"
+            @click="loadChat(chat.id)"
           >
             {{ chat.title }}
           </div>
@@ -206,88 +342,69 @@ onMounted(async () => {
       </NList>
     </div>
     <div class="grow flex flex-col items-center">
-      <div class="flex-1 w-full relative">
-        <NVirtualList
-          ref="listRef"
-          class="text-xl max-h-[70vh] pt-5"
-          :item-size="30"
-          :items="computedMessages"
-          item-resizable
+      <div v-if="isLoadingChat" class="w-full flex justify-center text-lg">
+        <i>Loading...</i>
+      </div>
+      <!-- List message -->
+      <div
+        ref="listRef"
+        class="flex-1 w-full text-xl max-h-full mt-5 overflow-y-scroll"
+      >
+        <div
+          v-for="(item, ind) in paginatedMessages"
+          :key="ind"
+          :class="item.type"
         >
-          <template #default="{ item }">
-            <div :class="item.type">
-              <div :class="[`message message-${item.type} mr-1`]">
-                <div v-html="item.content" />
-              </div>
-              <NButton
-                v-if="item.type === 'response'"
-                size="tiny"
-                tertiary
-                circle
-                @click="handleCollect(item)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="m11.066 8.004l.184-.005h7.5a3.25 3.25 0 0 1 3.245 3.065l.005.185v7.5a3.25 3.25 0 0 1-3.066 3.245l-.184.005h-7.5a3.25 3.25 0 0 1-3.245-3.066L8 18.75v-7.5a3.25 3.25 0 0 1 3.066-3.245M18.75 9.5h-7.5a1.75 1.75 0 0 0-1.744 1.606l-.006.144v7.5a1.75 1.75 0 0 0 1.607 1.744l.143.006h7.5a1.75 1.75 0 0 0 1.744-1.607l.006-.143v-7.5a1.75 1.75 0 0 0-1.75-1.75M15 11a.75.75 0 0 1 .75.75v2.498h2.5a.75.75 0 0 1 0 1.5h-2.5v2.502a.75.75 0 0 1-1.5 0v-2.502h-2.5a.75.75 0 1 1 0-1.5h2.5V11.75A.75.75 0 0 1 15 11m.582-6.767l.052.177l.693 2.588h-1.553l-.588-2.2a1.75 1.75 0 0 0-2.144-1.238L4.798 5.502a1.75 1.75 0 0 0-1.27 1.995l.032.148l1.942 7.244A1.75 1.75 0 0 0 7 16.176v1.506a3.25 3.25 0 0 1-2.895-2.228l-.052-.176l-1.941-7.245a3.25 3.25 0 0 1 2.12-3.928l.178-.052l7.244-1.941a3.25 3.25 0 0 1 3.928 2.12"
-                  />
-                </svg>
-              </NButton>
-            </div>
-          </template>
-        </NVirtualList>
-        <NSpin :show="isLoading" size="large">
+          <div :class="[`message message-${item.type} mr-1`]">
+            <div v-html="item.content" />
+          </div>
+          <NButton
+            v-if="isCollectable(item)"
+            size="tiny"
+            tertiary
+            circle
+            @click="handleCollect(item)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="m11.066 8.004l.184-.005h7.5a3.25 3.25 0 0 1 3.245 3.065l.005.185v7.5a3.25 3.25 0 0 1-3.066 3.245l-.184.005h-7.5a3.25 3.25 0 0 1-3.245-3.066L8 18.75v-7.5a3.25 3.25 0 0 1 3.066-3.245M18.75 9.5h-7.5a1.75 1.75 0 0 0-1.744 1.606l-.006.144v7.5a1.75 1.75 0 0 0 1.607 1.744l.143.006h7.5a1.75 1.75 0 0 0 1.744-1.607l.006-.143v-7.5a1.75 1.75 0 0 0-1.75-1.75M15 11a.75.75 0 0 1 .75.75v2.498h2.5a.75.75 0 0 1 0 1.5h-2.5v2.502a.75.75 0 0 1-1.5 0v-2.502h-2.5a.75.75 0 1 1 0-1.5h2.5V11.75A.75.75 0 0 1 15 11m.582-6.767l.052.177l.693 2.588h-1.553l-.588-2.2a1.75 1.75 0 0 0-2.144-1.238L4.798 5.502a1.75 1.75 0 0 0-1.27 1.995l.032.148l1.942 7.244A1.75 1.75 0 0 0 7 16.176v1.506a3.25 3.25 0 0 1-2.895-2.228l-.052-.176l-1.941-7.245a3.25 3.25 0 0 1 2.12-3.928l.178-.052l7.244-1.941a3.25 3.25 0 0 1 3.928 2.12"
+              />
+            </svg>
+          </NButton>
+        </div>
+      </div>
+      <div class="h-10 w-full flex justify-center items-center">
+        <NButton
+          v-if="!arrivedState.bottom"
+          class="inline-flex"
+          size="medium"
+          ghost
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
             viewBox="0 0 24 24"
           >
-            <circle cx="18" cy="12" r="0" fill="currentColor">
-              <animate
-                attributeName="r"
-                begin=".67"
-                calcMode="spline"
-                dur="1.5s"
-                keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
-                repeatCount="indefinite"
-                values="0;2;0;0"
-              />
-            </circle>
-            <circle cx="12" cy="12" r="0" fill="currentColor">
-              <animate
-                attributeName="r"
-                begin=".33"
-                calcMode="spline"
-                dur="1.5s"
-                keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
-                repeatCount="indefinite"
-                values="0;2;0;0"
-              />
-            </circle>
-            <circle cx="6" cy="12" r="0" fill="currentColor">
-              <animate
-                attributeName="r"
-                begin="0"
-                calcMode="spline"
-                dur="1.5s"
-                keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
-                repeatCount="indefinite"
-                values="0;2;0;0"
-              />
-            </circle>
+            <path
+              fill="currentColor"
+              d="M11 4h2v12l5.5-5.5l1.42 1.42L12 19.84l-7.92-7.92L5.5 10.5L11 16z"
+            />
           </svg>
-        </NSpin>
+          <span>Scroll to bottom</span>
+        </NButton>
       </div>
       <GreekInput
         v-model:text-model="request"
-        class="absolute w-[50%] bottom-4"
+        class="w-[70%]"
         :auto-hide="true"
+        :command-mode="true"
         :input-limit="20"
         input-style="h-30 p-2 text-xl"
         input-placeholder="Press [Enter] to chat..."
@@ -324,5 +441,25 @@ onMounted(async () => {
 .message-request {
   background: var(--color-blue-400);
   max-width: 80%;
+}
+
+table {
+  text-align: center;
+  width: 60vw;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: auto;
+}
+
+.dark table {
+  border: 1px solid var(--color-white);
+}
+
+.dark th,
+td {
+  border: 1px solid var(--color-white);
 }
 </style>

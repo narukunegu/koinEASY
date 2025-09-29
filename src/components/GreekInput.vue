@@ -5,18 +5,25 @@ import { useSettingsStore } from "@/stores/settings";
 
 import KeyboardComponent from "@/components/KeyboardComponent.vue";
 
-import normalizeGreek from "@/lib/normalize.ts";
+import { normalizeGreek } from "@/lib/helpers";
 
 // Reactive state for the input and keyboard modifiers
-const { autoHide, inputLimit, inputStyle, inputPlaceholder, showFooter } =
-  defineProps([
-    "autoHide",
-    "inputLimit",
-    "inputStyle",
-    "inputPlaceholder",
-    "offKeyboard",
-    "showFooter",
-  ]);
+const {
+  autoHide,
+  commandMode,
+  inputLimit,
+  inputStyle,
+  inputPlaceholder,
+  showFooter,
+} = defineProps([
+  "autoHide",
+  "commandMode",
+  "inputLimit",
+  "inputStyle",
+  "inputPlaceholder",
+  "offKeyboard",
+  "showFooter",
+]);
 const emit = defineEmits(["onEntered", "onSpaced"]);
 
 const textModel = defineModel<string>("text-model");
@@ -31,6 +38,7 @@ const pos = ref(0);
 const showKeyboard = ref<boolean>(!autoHide);
 const settingsStore = useSettingsStore();
 const onKeyboard = ref<boolean>(true);
+const mode = ref<"normal" | "command">("normal");
 
 const wordCounter = computed(() => {
   return textModel.value.split(/\s+/).filter((w) => w !== "").length;
@@ -70,13 +78,25 @@ async function handleOnType() {
     textareaRef.value!.setSelectionRange(pos.value, pos.value);
   }
 
-  if (outputChar.value === "\n") {
-    if (autoHide) {
-      textareaRef.value.blur();
-    }
-    emit("onEntered");
-  } else if (outputChar.value === " ") {
-    emit("onSpaced");
+  switch (outputChar.value) {
+    case "\n":
+      if (autoHide) {
+        textareaRef.value.blur();
+      }
+      emit("onEntered");
+      break;
+    case " ":
+      emit("onSpaced");
+      break;
+    case "/":
+      if (commandMode) {
+        showKeyboard.value = false;
+        mode.value = "command";
+      }
+      break;
+
+    default:
+      break;
   }
 }
 
@@ -86,14 +106,30 @@ function handleOnBack() {
 
 function handleKeyup(event: KeyboardEvent) {
   if (event.key === "Escape") {
+    mode.value = "normal";
     textareaRef.value.blur();
   }
-  if (!onKeyboard.value) {
+  if (!onKeyboard.value || !showKeyboard.value) {
     if (event.key === "Enter") {
       emit("onEntered");
     }
     if (event.key === " ") {
       emit("onSpaced");
+    }
+  }
+  if (mode.value === "command") {
+    switch (event.key) {
+      case " ":
+        showKeyboard.value = true;
+        mode.value = "normal";
+        break;
+
+      case "Enter":
+        mode.value = "normal";
+        textareaRef.value.blur();
+        break;
+      default:
+        break;
     }
   }
 }
@@ -117,7 +153,6 @@ function handleKeypressEvent(event: KeyboardEvent) {
   if (!showKeyboard.value && event.shiftKey && event.key === " ") {
     event.preventDefault();
     textareaRef.value.focus();
-    // showKeyboard.value = onKeyboard.value;
   }
 }
 
@@ -144,11 +179,30 @@ onUnmounted(() => {
         rows="3"
         :class="`w-full bg-secondary border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none overflow-y-auto ${inputStyle}`"
         :placeholder="inputPlaceholder"
-        @focus="showKeyboard = onKeyboard"
-        @blur="showKeyboard = !autoHide && onKeyboard"
+        @focus="showKeyboard = true"
+        @blur="showKeyboard = !autoHide"
         @keyup="handleKeyup"
       />
-      <div v-if="showFooter" class="absolute bottom-4 flex justify-end w-full">
+      <div
+        v-if="showFooter"
+        class="absolute bottom-4 flex justify-between w-full items-baseline"
+      >
+        <div class="flex space-x-2 items-center">
+          <div
+            :class="`text-md ml-5 ${wordCounter >= inputLimit ? 'text-red-500' : ''}`"
+          >
+            {{ wordCounter }}/{{ inputLimit || 30 }}
+          </div>
+          <NSwitch
+            v-model:value="onKeyboard"
+            class="align-right"
+            size="small"
+            @update-value="handleKeyboardMode"
+          >
+            <template #checked> Keyboard On </template>
+            <template #unchecked> Keyboard Off </template>
+          </NSwitch>
+        </div>
         <button
           class="h-10 w-10 mx-2 px-2 rounded-lg bg-gray-500"
           @click="emit('onEntered')"
@@ -171,22 +225,7 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
-    <div class="flex justify-between items-center my-2">
-      <div
-        :class="`text-md ml-5 ${wordCounter >= inputLimit ? 'text-red-500' : ''}`"
-      >
-        {{ wordCounter }}/{{ inputLimit || 30 }}
-      </div>
-      <NSwitch
-        v-model:value="onKeyboard"
-        class="align-right"
-        size="medium"
-        @update-value="handleKeyboardMode"
-      >
-        <template #checked> Keyboard On </template>
-        <template #unchecked> Keyboard Off </template>
-      </NSwitch>
-    </div>
+    <div class="flex justify-between items-center my-2" />
     <!-- Keyboard component -->
     <KeyboardComponent
       v-if="onKeyboard && showKeyboard"

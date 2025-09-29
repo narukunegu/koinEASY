@@ -114,6 +114,7 @@ export const diacriticsMap = {
   ῳ: ["ω", "subscript"],
   ᾠ: ["ω", "smooth", "subscript"],
   ᾡ: ["ω", "rough", "subscript"],
+  ῷ: ["ω", "circumflex", "subscript"],
   ᾢ: ["ω", "smooth", "grave", "subscript"],
   ᾣ: ["ω", "rough", "grave", "subscript"],
   ᾤ: ["ω", "smooth", "acute", "subscript"],

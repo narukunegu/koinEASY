@@ -29,8 +29,21 @@ watch(color, () => {
   </NConfigProvider>
 </template>
 
-<style scoped>
+<style>
 :root {
   font-family: GentiumW, sans-serif;
+}
+span.lemma {
+  font-weight: bold;
+}
+span.tr-lang {
+  color: white;
+  background: rgb(78, 89, 166);
+  font-weight: bold;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
+span.gramm {
+  color: darkgreen;
 }
 </style>

@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { NButton, NSwitch, NVirtualList, NCard, NSkeleton } from "naive-ui";
-import { ref } from "vue";
+import { NButton, NSwitch, NCard, NSkeleton } from "naive-ui";
+import { computed, ref } from "vue";
 
 import GreekInput from "@/components/GreekInput.vue";
 import WordCard from "@/components/WordCard.vue";
 
-import { analyzeWord, parseWordList } from "@/lib/data";
+import { analyzeWord, parseWordList } from "@/lib/words";
 
 // Reactive state for the input and keyboard modifiers
 const text = ref("");
 const wordList = ref<any[]>([]);
+const computedList = computed(() => {
+  return wordList.value.slice(0, 19);
+});
 const isAnalyzing = ref(false);
 const showHint = ref(false);
 
@@ -35,21 +38,21 @@ async function handleOnTypeAnalyze() {
 </script>
 
 <template>
-  <div class="flex min-h-screen">
-    <div id="app" class="w-2/3 m-5">
+  <div class="flex h-screen">
+    <div class="grow m-5">
       <!-- Textarea for output -->
       <GreekInput
         v-model:text-model="text"
         :auto-hide="false"
-        input-style="h-[30vh] p-4 text-2xl"
+        input-style="h-[40vh] p-4 text-2xl"
         input-placeholder="Press [Space] or [Enter] to analyze on typing..."
-        :show-footer="false"
+        :show-footer="true"
         @on-entered="handleOnTypeAnalyze"
         @on-spaced="handleOnTypeAnalyze"
       />
     </div>
     <!-- Result list -->
-    <div class="w-1/3 h-[88vh] text-xl m-1 rounded-lg">
+    <div class="h-[90vh] w-[40vw] flex flex-col text-xl m-1 pr-5 rounded-lg">
       <div class="flex justify-between items-center mr-2 my-2">
         <NButton size="small" round type="primary" @click="wordList = []">
           <svg
@@ -65,26 +68,25 @@ async function handleOnTypeAnalyze() {
           </svg>
         </NButton>
         <NSwitch v-model:value="showHint" size="large">
-          <template #checked> Show Romans </template>
-          <template #unchecked> Hide Romans </template>
+          <template #checked> Show Hint </template>
+          <template #unchecked> Hide Hint </template>
         </NSwitch>
       </div>
-      <NVirtualList :item-size="30" :items="wordList" item-resizable>
-        <template #default="{ item }">
-          <NCard
-            :key="item.query"
-            :title="item.query"
-            :segmented="{ content: true }"
-            class="mb-2"
-            header-style="font-size: 22px; text-align: center;"
-            size="medium"
-            hoverable
-          >
-            <NSkeleton v-if="item.isAnalyzing" text :repeat="3" />
-            <WordCard v-else v-model:show-hint="showHint" :content="item" />
-          </NCard>
-        </template>
-      </NVirtualList>
+      <div class="flex flex-col h-max-full overflow-y-scroll">
+        <NCard
+          v-for="item in computedList"
+          :key="item.query"
+          :title="item.query"
+          :segmented="{ content: true }"
+          class="mb-2"
+          header-style="font-size: 22px; text-align: center;"
+          size="medium"
+          hoverable
+        >
+          <NSkeleton v-if="item.isAnalyzing" text :repeat="3" />
+          <WordCard v-else v-model:show-hint="showHint" :content="item" />
+        </NCard>
+      </div>
     </div>
   </div>
 </template>

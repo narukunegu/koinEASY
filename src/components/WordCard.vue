@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, useTemplateRef } from "vue";
-import { romanizeKoine } from "@/lib/romanize.ts";
-import normalizeGreek from "@/lib/normalize.ts";
+import { computed } from "vue";
+import { romanizeKoine } from "@/lib/helpers";
 
 const { content } = defineProps(["content"]);
 const showHint = defineModel("showHint");
 
 const filter = computed(() => {
   let text = "";
-
   content.result.forEach((word: string) => {
     let res = word;
     res = res.replace(/k="/g, `data-word="`);
@@ -29,27 +27,14 @@ function handleMouseover(event: MouseEvent) {
 </script>
 
 <template>
-  <div class="text-xl" @mouseover="handleMouseover" v-html="filter" />
+  <div class="word-card text-xl" @mouseover="handleMouseover" v-html="filter" />
 </template>
 
 <style>
-span.lemma {
-  font-weight: bold;
-}
-span.tr-lang {
-  color: white;
-  background: rgb(78, 89, 166);
-  font-weight: bold;
-  padding-left: 0.2em;
-  padding-right: 0.2em;
-}
-span.gramm {
-  color: darkgreen;
-}
-ul {
+.word-card ul {
   margin-top: 0;
   list-style: disc;
   cursor: text;
-  -webkit-user-select: text;
+  user-select: text;
 }
 </style>

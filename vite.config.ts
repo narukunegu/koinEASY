@@ -1,7 +1,7 @@
-import path from 'node:path'
-import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -10,10 +10,10 @@ export default defineConfig(async () => ({
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-  envPrefix: ['VITE_', 'TAURI_ENV_*'],
+  envPrefix: ["VITE_", "TAURI_ENV_*"],
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors
@@ -25,7 +25,7 @@ export default defineConfig(async () => ({
     strictPort: true,
     hmr: host
       ? {
-          protocol: 'ws',
+          protocol: "ws",
           host: host,
           port: 1421,
         }
@@ -35,5 +35,4 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
   },
-  
 }));

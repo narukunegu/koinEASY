@@ -50,6 +50,7 @@ export const physicalKeyMap: KeyMapType = {
   "^": ["^"],
   "=": ["="],
   "~": ["~"],
+  "/": ["/"],
 };
 
 export interface KeyType {
