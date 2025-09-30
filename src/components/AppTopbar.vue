@@ -3,8 +3,8 @@
 <template>
   <div class="flex items-center h-10 bg-sidebar pl-10">
     <span class="text-2xl font-bold"> koinEASY </span>
-    <span class="bg-secondary text-sm rounded-sm mx-2 p-1">BETA</span>
-    <span class="text-xl">1.25.4</span>
+    <span class="bg-secondary text-sm rounded-sm mx-2 p-1">PLUS</span>
+    <span class="text-xl">2.25.0</span>
   </div>
 </template>
 
