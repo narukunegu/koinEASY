@@ -17,22 +17,21 @@ A desktop application with Koine Greek virtual keyboard and simple Greek text an
 
 ## Preview
 
-### _Light mode dashboard view_
+### _Quick analysis_
 
-![Light Mode Dashboard](./docs/images/light-mode-dashboard.png)
+![Dark Mode Analysis](./docs/images/quick-analyze.png)
 
-### _Dark mode settings view_
+### _Chat feature_
 
-![Dark Mode Settings](./docs/images/dark-mode-settings.png)
+![Chat feature](./docs/images/chat-feature.png)
 
-### _Language support view_
+### _Light mode_
 
-![Language Support](./docs/images/language-support.png)
+![Light Mode](./docs/images/light-mode.png)
 
 ## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/)
-- [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- [Lazyvim](https://www.lazyvim.org/)
 - [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
 - [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
