@@ -16,7 +16,7 @@ const sidebarRoutes = [
     icon: "akar-icons:thunder",
     path: "/fast",
   },
-  { name: "fun.label", icon: "ph:chat", path: "/fun" },
+  // { name: "fun.label", icon: "ph:chat", path: "/fun" },
 ];
 </script>
 
