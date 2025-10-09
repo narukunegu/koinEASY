@@ -2,7 +2,7 @@
 import { NButton, NSwitch, NCard, NSkeleton } from "naive-ui";
 import { computed, ref } from "vue";
 
-import GreekInput from "@/components/GreekInput.vue";
+import InputComponent from "@/components/InputComponent.vue";
 import WordCard from "@/components/WordCard.vue";
 
 import { analyzeWord, parseWordList } from "@/lib/words";
@@ -41,12 +41,12 @@ async function handleOnTypeAnalyze() {
   <div class="flex h-screen">
     <div class="grow m-5">
       <!-- Textarea for output -->
-      <GreekInput
-        v-model:text-model="text"
-        :auto-hide="false"
+      <InputComponent
+        v-model:output-text="text"
         input-style="h-[40vh] p-4 text-2xl"
         input-placeholder="Press [Space] or [Enter] to analyze on typing..."
         :show-footer="true"
+        :command-mode="false"
         @on-entered="handleOnTypeAnalyze"
         @on-spaced="handleOnTypeAnalyze"
       />

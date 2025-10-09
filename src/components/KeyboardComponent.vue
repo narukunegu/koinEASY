@@ -1,39 +1,43 @@
 <script lang="ts" setup>
-import type { KeyType } from "@/lib/keyMap.ts";
+import type { KeyType } from "@/lib/keyboardLayout";
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
-import { diacriticsMap } from "@/lib/diacriticsMap.ts";
 import { keyboardLayout } from "@/lib/keyboardLayout.ts";
-import { diacriticsKey, physicalKeyMap } from "@/lib/keyMap.ts";
 
-const emit = defineEmits(["onTyped", "onBackTyped"]);
+const emit = defineEmits(["onTyped", "onBackspaced", "onEscaped"]);
 
 // Reactive state for the input and keyboard modifiers
 const output = defineModel<string>("output");
 const isShifted = ref(false);
 const isCapsLocked = ref(false);
-const currentDiacritic = defineModel<string[]>("buffer");
 
 // --- Computed Properties ---
 const isUpperCase = computed(() => isShifted.value || isCapsLocked.value);
 
 function getKeyValue(key: KeyType) {
-  if (key.display) {
-    return key.display;
-  }
   if (isUpperCase.value) {
     return key.shift || key.value.toUpperCase();
   }
   return key.value;
 }
 
-function getSubKeyValue(key: KeyType) {
-  if (key.display) {
+function getKeyDisplay(key: KeyType) {
+  const display = key.display || key.value;
+  if (isUpperCase.value) {
+    return display.toUpperCase() === key.value
+      ? key.shift
+      : display.toUpperCase();
+  }
+  return display;
+}
+
+function getSubDisplay(key: KeyType) {
+  if (!key.display || key.special) {
     return;
   }
-  if (isUpperCase.value && key.sub) {
-    return key.sub.toUpperCase();
+  if (isUpperCase.value) {
+    return key.value.toUpperCase();
   }
-  return key.sub;
+  return key.value;
 }
 
 function getKeyClass(key: KeyType) {
@@ -58,22 +62,20 @@ function isSpecialKeyActive(key: KeyType) {
 }
 
 // Function to handle virtual key clicks
-function handleKeyPress(key: KeyType, isVirtual = true) {
-  const vKey: string = (isShifted.value ? key.shift : key.value) || "";
+function handleKeyPress(key: KeyType) {
   if (key.special) {
+    output.value = "";
     switch (key.value) {
       case "enter":
         output.value = "\n";
         break;
       case "backspace":
-        output.value = "";
-        emit("onBackTyped");
+        emit("onBackspaced");
         break;
       case "shift":
         isShifted.value = !isShifted.value;
         break;
       case "caps":
-        output.value = "";
         isCapsLocked.value = !isCapsLocked.value;
         break;
       case "space":
@@ -82,30 +84,13 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
       case "tab":
         output.value = "\t";
         break;
-    }
-    if (key.value !== "shift") {
-      currentDiacritic.value = [];
-    }
-  } else if (currentDiacritic.value!.length > 0 && diacriticsKey[vKey]) {
-    currentDiacritic.value!.push(diacriticsKey[vKey] as string);
-    const combined = Object.entries(diacriticsMap).find(([...v]) => {
-      return v[1].sort().join("-") === currentDiacritic.value!.sort().join("-");
-    });
-
-    if (combined) {
-      output.value = combined[0];
-    } else {
-      output.value = "";
-      currentDiacritic.value = [];
+      case "escape":
+        emit("onEscaped");
+        break;
     }
   } else {
     output.value = getKeyValue(key);
-    if (key.hasDiacritic) {
-      currentDiacritic.value = [getKeyValue(key)];
-    } else {
-      currentDiacritic.value = [];
-    }
-    if (isVirtual && isShifted.value) {
+    if (isShifted.value) {
       isShifted.value = false;
     }
   }
@@ -114,64 +99,6 @@ function handleKeyPress(key: KeyType, isVirtual = true) {
     emit("onTyped");
   });
 }
-
-// Function to handle physical keyboard input events
-function handlePhysicalKeyDown(event: KeyboardEvent) {
-  if (event.ctrlKey || event.altKey || event.metaKey) {
-    return;
-  }
-  if (event.shiftKey) {
-    isShifted.value = true;
-
-    if (event.key === "Shift") {
-      return;
-    }
-  }
-
-  const keyCode = event.code;
-  const keyData = physicalKeyMap[keyCode] || physicalKeyMap[event.key];
-
-  if (keyData) {
-    event.preventDefault(); // Prevent default browser behavior
-    const charToType = keyData[0];
-    let virtualKey = keyboardLayout.value
-      .flat()
-      .find((k) => k.value === charToType);
-    virtualKey =
-      virtualKey ||
-      keyboardLayout.value.flat().find((k) => k.shift === charToType);
-    if (virtualKey) {
-      virtualKey.isActive = true;
-      handleKeyPress(virtualKey, false);
-    }
-  } else {
-    currentDiacritic.value = [];
-  }
-}
-
-function handlePhysicalKeyUp(event: KeyboardEvent) {
-  const keyCode = event.code;
-  if (keyCode === "ShiftLeft" || keyCode === "ShiftRight") {
-    isShifted.value = false;
-  } else {
-    keyboardLayout.value.flat().forEach((key) => {
-      if (key.isActive) {
-        key.isActive = false;
-      }
-    });
-  }
-}
-
-// Lifecycle hooks to manage event listeners
-onMounted(() => {
-  window.addEventListener("keydown", handlePhysicalKeyDown);
-  window.addEventListener("keyup", handlePhysicalKeyUp);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("keydown", handlePhysicalKeyDown);
-  window.removeEventListener("keyup", handlePhysicalKeyUp);
-});
 </script>
 
 <template>
@@ -187,11 +114,11 @@ onUnmounted(() => {
         :key="key.value"
         :class="[getKeyClass(key), { active: isSpecialKeyActive(key) }]"
         :style="{ flex: key.flex || 1 }"
-        @click="handleKeyPress(key)"
+        @click.prevent="handleKeyPress(key)"
       >
         <div class="grid grid-cols-1">
-          <span class="mr-2 text-2xl">{{ getKeyValue(key) }}</span>
-          <span class="ml-4 text-base">{{ getSubKeyValue(key) }}</span>
+          <span class="mr-2 text-2xl">{{ getKeyDisplay(key) }}</span>
+          <span class="ml-4 text-base">{{ getSubDisplay(key) }}</span>
         </div>
       </button>
     </div>
