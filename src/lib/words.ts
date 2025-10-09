@@ -104,15 +104,7 @@ export async function parseWordData(lemma: string) {
 
     if (extras[gramm]) {
       extras[gramm].push(morph);
-    } else if (
-      !(
-        gramm.includes("doric") ||
-        gramm.includes("ionic") ||
-        gramm.includes("attic") ||
-        gramm.includes("epic") ||
-        gramm.includes("dual")
-      )
-    ) {
+    } else {
       extras[gramm] = [morph];
     }
     start = word.m.indexOf(`<li class="morph-grc-li"`, end);
@@ -122,6 +114,7 @@ export async function parseWordData(lemma: string) {
     lemma,
     meaning,
     extras,
+    rating: [0, 0],
   };
 }
 
@@ -182,6 +175,7 @@ export function parseTableMorph(lemma: string, extras: any) {
   const keys = Object.keys(extras);
   const masc = keys.filter((k) => k.includes("masc"));
   if (masc.length) {
+    console.error(masc);
     tables.push(
       `<table><caption>Masc</caption>${parseDeclension(lemma, extras, masc)}</table>`,
     );
@@ -210,7 +204,24 @@ export async function parseQuiz(nQuest: number, words: any[]) {
   if (words.length === 0) {
     return;
   }
-  const grammars = words.map((w) => Object.keys(w.extras)).flat();
+  const grammars = words
+    .map((w) => Object.keys(w.extras))
+    .flat()
+    .filter(
+      (g) =>
+        ![
+          "comp",
+          "dual",
+          "superl",
+          "attic",
+          "doric",
+          "epic",
+          "ionic",
+          "aeolic",
+        ].reduce((p, c) => {
+          return p || g.includes(c);
+        }, false),
+    );
   const questions = [];
   const qTypes = ["Declension", "ToGreek", "FromGreek"];
   let question: string = "";
@@ -226,7 +237,14 @@ export async function parseQuiz(nQuest: number, words: any[]) {
 
   let word: any;
   let gramm: any;
-  let temp: any;
+  const poolWords: any[] = words
+    .map((w) =>
+      Array.from(
+        { length: 11 - Math.floor((w.rating[0] / w.rating[1] || 1) * 10) },
+        () => w,
+      ),
+    )
+    .flat();
   const possibleChoices = words.filter((w) => w.meaning !== undefined).length;
   const limitGeneration = 100000;
   let i = 0;
@@ -234,7 +252,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
   while (i < nQuest && j < limitGeneration) {
     switch (qTypes[randomInt(qTypes.length)]) {
       case "ToGreek":
-        word = words[randomInt(words.length)];
+        word = poolWords[randomInt(poolWords.length)];
         if (!word.meaning) {
           j++;
           continue;
@@ -248,7 +266,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
         break;
 
       case "FromGreek":
-        word = words[randomInt(words.length)];
+        word = poolWords[randomInt(poolWords.length)];
         if (!word.meaning || possibleChoices < 4) {
           j++;
           continue;
@@ -259,18 +277,17 @@ export async function parseQuiz(nQuest: number, words: any[]) {
           continue;
         }
 
-        temp = word;
         choices = [word];
         for (let c = 0; c < 3; c++) {
-          let w = words[randomInt(words.length)];
+          let w = poolWords[randomInt(poolWords.length)];
           while (!w.meaning || choices.includes(w))
-            w = words[randomInt(words.length)];
+            w = poolWords[randomInt(poolWords.length)];
           choices.push(w);
         }
         choices = shuffle(choices);
         choices.forEach((choice, index) => {
           question += `<p>${index + 1}. ${choice.meaning.en} | ${choice.meaning.fr}</p>`;
-          if (choice.lemma === temp.lemma) {
+          if (choice.lemma === word.lemma) {
             answer = [(index + 1).toString()];
           }
         });
@@ -279,7 +296,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
       default:
         // Declension
         while (true) {
-          word = words[randomInt(words.length)];
+          word = poolWords[randomInt(poolWords.length)];
           gramm = grammars[randomInt(grammars.length)];
           let count = 0;
           while (!word.extras[gramm] && count < 10) {
@@ -298,7 +315,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
         answer = word.extras[gramm];
         break;
     }
-    questions.push({ question, answer });
+    questions.push({ question, answer, lemma: word.lemma });
     i++;
   }
   if (j >= limitGeneration) {

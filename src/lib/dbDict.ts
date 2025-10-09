@@ -15,8 +15,16 @@ export async function getWords(query: string) {
 
 export async function getWord(query: string) {
   const res: any[] = await db.select("SELECT * FROM word WHERE w = $1", [
-    query,
+    query.trim(),
   ]);
 
   return res[0];
+}
+
+export async function updateWord(word: any) {
+  return await db.execute("UPDATE word SET w = $1, m = $2 WHERE id = $3", [
+    word.w,
+    word.m,
+    word.id,
+  ]);
 }

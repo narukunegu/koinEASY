@@ -12,14 +12,10 @@ export async function getChat(id: number) {
   return res[0];
 }
 
-export async function newChat() {
+export async function postChat(chat: any) {
   const chatId = await db.execute(
     "INSERT INTO chats (title, messages, words) VALUES ($1, $2, $3)",
-    [
-      "untitled",
-      JSON.stringify([{ type: "response", content: "Χαῖρε!" }]),
-      `[]`,
-    ],
+    [chat.title, JSON.stringify(chat.messages), JSON.stringify(chat.words)],
   );
   return chatId.lastInsertId;
 }
@@ -47,8 +43,13 @@ export async function deleteChat(chatId: number) {
 export async function getTitles() {
   const res: any[] = await db.select("SELECT id, title FROM chats");
   if (res.length === 0) {
-    const newId = await newChat();
-    res.push({ id: newId, title: "untitled" });
+    const newChat = {
+      title: new Date().toDateString(),
+      messages: [{ type: "response", content: "Χαῖρε!" }],
+      words: [],
+    };
+    const newId = await postChat(newChat);
+    res.push({ id: newId, title: newChat.title });
   }
   return res.reverse();
 }

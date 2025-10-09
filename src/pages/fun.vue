@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useScroll } from "@vueuse/core";
 import { NButton, NInput, NList, NListItem, NSpace } from "naive-ui";
-import GreekInput from "@/components/GreekInput.vue";
+import InputComponent from "@/components/InputComponent.vue";
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
 import type { MessageType } from "@/lib/dbChats";
@@ -10,7 +10,7 @@ import {
   getMessages,
   getTitles,
   getWords,
-  newChat,
+  postChat,
   getChat,
   updateChat,
   updateTitle,
@@ -34,7 +34,6 @@ const lemmas = ref<string[]>();
 const titleList = ref<any[]>([]);
 const edittingId = ref<number>(null);
 const isLoadingChat = ref(false);
-const isLoadingMessages = ref(false);
 const currentId = ref(null);
 const quizMode = ref<boolean>(false);
 const questions = ref<any[]>();
@@ -92,9 +91,14 @@ async function handleRequest() {
     // check answer
     pushRequest(request.value);
     const answer = questions.value[currQuestIndex.value].answer;
+    const ind = words.value.findIndex(
+      (w) => w.lemma === questions.value[currQuestIndex.value].lemma,
+    );
+    words.value[ind].rating[1]++;
     if (answer.includes(wordList[0])) {
       pushResponse("<i>Your answer is correct!</i>");
       correctCount.value++;
+      words.value[ind].rating[0]++;
     } else {
       pushResponse(
         `<p><i>Your answer is incorrect!</i></p><p>The correct answer is <strong>${answer.join("/")}</strong>.</p>`,
@@ -163,6 +167,10 @@ async function handleRequest() {
           pushResponse(
             `<p>Question 1.</p>${questions.value[0].question}<p><i>Waiting for answer.</i></p>`,
           );
+          questions.value.forEach((q) => {
+            const ind = words.value.findIndex((w) => w.lemma === q.lemma);
+            words.value[ind].rating = [0, 0];
+          });
         }
       }
       break;
@@ -223,8 +231,13 @@ async function loadChat(chatId: number) {
 }
 
 async function handleAddChat() {
-  const newId = await newChat();
-  titleList.value.unshift({ id: newId, title: "untitled" });
+  const chat = {
+    title: new Date().toDateString(),
+    messages: [{ type: "response", content: "Χαῖρε!" }],
+    words: [],
+  };
+  const newId = await postChat(chat);
+  titleList.value.unshift({ id: newId, ...chat });
   await loadChat(newId);
 }
 
@@ -348,7 +361,7 @@ onMounted(async () => {
       <!-- List message -->
       <div
         ref="listRef"
-        class="flex-1 w-full text-xl max-h-full mt-5 overflow-y-scroll"
+        class="flex-1 w-full text-xl max-h-full mt-5 overflow-y-scroll select-text cursor-text"
       >
         <div
           v-for="(item, ind) in paginatedMessages"
@@ -400,10 +413,9 @@ onMounted(async () => {
           <span>Scroll to bottom</span>
         </NButton>
       </div>
-      <GreekInput
-        v-model:text-model="request"
+      <InputComponent
+        v-model:output-text="request"
         class="w-[70%]"
-        :auto-hide="true"
         :command-mode="true"
         :input-limit="20"
         input-style="h-30 p-2 text-xl"

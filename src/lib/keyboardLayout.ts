@@ -1,20 +1,30 @@
-import type { KeyType } from "./keyMap";
 import { ref } from "vue";
+
+export interface KeyType {
+  value: string;
+  shift?: string;
+  display?: string;
+  special?: boolean;
+  flex?: number;
+  isActive?: boolean;
+  isDiacritic?: boolean;
+}
+
 // --- Keyboard Layout (Koine Greek) ---
 export const keyboardLayout = ref<KeyType[][]>([
   // Row 1
   [
-    { value: "`", shift: "~", isDiacritic: true },
+    { value: "`", shift: "~" },
     { value: "1", shift: "!" },
     { value: "2", shift: "@" },
     { value: "3", shift: "#" },
     { value: "4", shift: "$" },
     { value: "5", shift: "%" },
-    { value: "6", shift: "^", isDiacritic: true },
+    { value: "6", shift: "^" },
     { value: "7", shift: "&" },
     { value: "8", shift: "*" },
-    { value: "9", shift: "(" },
-    { value: "0", shift: ")" },
+    { value: "9", shift: "(", isDiacritic: true },
+    { value: "0", shift: ")", isDiacritic: true },
     { value: "-", shift: "_", isDiacritic: true },
     { value: "=", shift: "+", isDiacritic: true },
     { value: "backspace", display: "⌫", special: true, flex: 1.5 },
@@ -22,51 +32,54 @@ export const keyboardLayout = ref<KeyType[][]>([
   // Row 2
   [
     { value: "tab", display: "⇥", special: true, flex: 1.5 },
-    { value: "᾿", shift: "῾", sub: "q", isDiacritic: true },
-    { value: "ς", shift: "Σ", sub: "w" },
-    { value: "ε", shift: "Ε", sub: "e", hasDiacritic: true },
-    { value: "ρ", shift: "Ρ", sub: "r", hasDiacritic: true },
-    { value: "τ", shift: "Τ", sub: "t" },
-    { value: "υ", shift: "Υ", sub: "y", hasDiacritic: true },
-    { value: "θ", shift: "Θ", sub: "u" },
-    { value: "ι", shift: "Ι", sub: "i", hasDiacritic: true },
-    { value: "ο", shift: "Ο", sub: "o", hasDiacritic: true },
-    { value: "π", shift: "Π", sub: "p" },
+    { display: "θ", value: "q", shift: "*q" },
+    { display: "ω", value: "w", shift: "*w" },
+    { display: "ε", value: "e", shift: "*e" },
+    { display: "ρ", value: "r", shift: "*r" },
+    { display: "τ", value: "t", shift: "*t" },
+    { display: "ψ", value: "y", shift: "*y" },
+    { display: "υ", value: "u", shift: "*u" },
+    { display: "ι", value: "i", shift: "*i" },
+    { display: "ο", value: "o", shift: "*o" },
+    { display: "π", value: "p", shift: "*p" },
     { value: "[", shift: "{" },
     { value: "]", shift: "}" },
-    { value: "\\", shift: "|", flex: 1.5 },
+    { value: "\\", shift: "|", flex: 1.5, isDiacritic: true },
   ],
   // Row 3
   [
     { value: "caps", display: "⇪", special: true, flex: 1.75 },
-    { value: "α", shift: "Α", sub: "a", hasDiacritic: true },
-    { value: "σ", shift: "Σ", sub: "s" },
-    { value: "δ", shift: "Δ", sub: "d" },
-    { value: "φ", shift: "Φ", sub: "f" },
-    { value: "γ", shift: "Γ", sub: "g" },
-    { value: "η", shift: "Η", sub: "h", hasDiacritic: true },
-    { value: "ξ", shift: "Ξ", sub: "j" },
-    { value: "κ", shift: "Κ", sub: "k" },
-    { value: "λ", shift: "Λ", sub: "l" },
+    { display: "α", value: "a", shift: "*a" },
+    { display: "σ", value: "s", shift: "*s" },
+    { display: "δ", value: "d", shift: "*d" },
+    { display: "φ", value: "f", shift: "*f" },
+    { display: "γ", value: "g", shift: "*g" },
+    { display: "η", value: "h", shift: "*h" },
+    { display: "σ", value: "j", shift: "*j" },
+    { display: "κ", value: "k", shift: "*k" },
+    { display: "λ", value: "l", shift: "*l" },
     { value: ";", shift: ":" },
-    { value: "'", shift: '"', isDiacritic: true },
+    { value: "'", shift: `"` },
     { value: "enter", display: "⏎", special: true, flex: 1.75 },
   ],
   // Row 4
   [
     { value: "shift", display: "⇧", special: true, flex: 2.25 },
-    { value: "ζ", shift: "Ζ", sub: "z" },
-    { value: "χ", shift: "Χ", sub: "x" },
-    { value: "ψ", shift: "Ψ", sub: "c" },
-    { value: "ω", shift: "Ω", sub: "v", hasDiacritic: true },
-    { value: "β", shift: "Β", sub: "b" },
-    { value: "ν", shift: "Ν", sub: "n" },
-    { value: "μ", shift: "Μ", sub: "m" },
+    { display: "ζ", value: "z", shift: "*z" },
+    { display: "χ", value: "x", shift: "*x" },
+    { display: "ξ", value: "c", shift: "*c" },
+    { value: "v", shift: "V" },
+    { display: "β", value: "b", shift: "*b" },
+    { display: "ν", value: "n", shift: "*n" },
+    { display: "μ", value: "m", shift: "*m" },
     { value: ",", shift: "<" },
     { value: ".", shift: ">" },
-    { value: "/", shift: "?" },
+    { value: "/", shift: "?", isDiacritic: true },
     { value: "shift", display: "⇧", special: true, flex: 2.25 },
   ],
   // Row 5
-  [{ value: "space", display: "", special: true, flex: 10 }],
+  [
+    { value: "space", display: "", special: true, flex: 10 },
+    { value: "escape", display: "esc", special: true },
+  ],
 ]);
