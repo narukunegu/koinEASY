@@ -7,23 +7,20 @@ import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 import type { MessageType } from "@/lib/dbChats";
 import {
   deleteChat,
-  getMessages,
   getTitles,
-  getWords,
   postChat,
   getChat,
   updateChat,
   updateTitle,
 } from "@/lib/dbChats";
 import {
-  analyzeWord,
-  parseLemma,
+  parseDict,
   parseQuiz,
-  parseTableMorph,
+  parseMorph,
   parseWordList,
   parseWordData,
+  parseForm,
 } from "@/lib/words";
-import dictionary from "@/assets/dictionary.json";
 
 const loadingItem = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"> <circle cx="18" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin=".67" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> <circle cx="12" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin=".33" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> <circle cx="6" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin="0" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> </svg>`;
 const listRef = useTemplateRef<HTMLElement>("listRef");
@@ -74,8 +71,8 @@ watch(currentPage, () => {
   }
 });
 
-function pushResponse(content: string) {
-  messages.value.push({ type: "response", content });
+function pushResponse(content: string, lemma?: string) {
+  messages.value.push({ type: "response", content, lemma });
   scrollToBottom();
   currentPage.value = maxPage.value;
 }
@@ -102,7 +99,7 @@ async function handleRequest() {
       words.value[ind].rating[0]++;
     } else {
       pushResponse(
-        `<p><i>Your answer is incorrect!</i></p><p>The correct answer is <strong>${answer.join("/")}</strong>.</p>`,
+        `<p><i>Your answer is incorrect!</i></p><p>The correct answer is <strong>${answer}</strong>.</p>`,
       );
     }
     // push new question
@@ -115,6 +112,7 @@ async function handleRequest() {
       pushResponse(
         `<p><i>The quiz has finished.</i></p><p>Your correct rating is ${Math.floor((correctCount.value / nQuest.value) * 100)}%.</p>`,
       );
+      await updateChat({ chatId: currentId.value, words: words.value });
       quizMode.value = false;
     }
     return;
@@ -122,39 +120,47 @@ async function handleRequest() {
 
   let content = "";
   let res: any;
-  const lemmaList = Object.keys(dictionary);
 
   const command = wordList.shift();
   switch (command) {
-    case "/dict":
+    case "/form":
       pushRequest(
-        `Test dict ${lemmaList.filter((v) => v.includes(wordList[0])).length}`,
+        `<span class="font-extrabold pr-2">/form</span><span>${wordList[0]}</span>`,
       );
+      pushResponse(loadingItem);
+      res = await parseForm(wordList[0]);
+      messages.value.pop();
+      if (res.length === 0) {
+        pushResponse(`No result for ${wordList[0]}.`);
+      } else {
+        pushResponse(res.join(""));
+      }
       break;
 
     case "/words":
-      pushRequest(`<span class="font-extrabold underline">/words</span>`);
-      content = `<p><strong>Collected words: ${words.value.length}</strong></p>`;
-      content += `<p>${words.value.map((w) => w.lemma).join("; ")}</p>`;
+      pushRequest(`<span class="font-extrabold">/words</span>`);
+      content = `<p><strong>Word collection: ${lemmas.value.length}</strong></p>`;
+      content += `<p>${lemmas.value.join("; ")}</p>`;
       pushResponse(content);
       break;
+
     case "/morph":
       pushRequest(
-        `<span class="font-extrabold underline pr-2">/morph</span><span>${wordList[0]}</span>`,
+        `<span class="font-extrabold pr-2">/morph</span><span>${wordList[0]}</span>`,
       );
-      res = words.value.find((w) => w.lemma === wordList[0]);
-      if (res) {
-        const tables = parseTableMorph(res.lemma, res.extras);
-        tables.forEach((table) => {
+      res = await parseMorph(wordList[0]);
+      if (res.length !== 0) {
+        res.forEach((table: any) => {
           pushResponse(table);
         });
       } else {
         pushResponse(`No result for ${wordList[0]}.`);
       }
       break;
+
     case "/quiz":
       pushRequest(
-        `<span class="font-extrabold underline mr-2">/quiz</span><span>${wordList.join(" ")}</span>`,
+        `<span class="font-extrabold mr-2">/quiz</span><span>${wordList.join(" ")}</span>`,
       );
       nQuest.value = Number.parseInt(wordList[0]);
       if (!Number.isInteger(nQuest.value) || nQuest.value > 100) {
@@ -163,10 +169,11 @@ async function handleRequest() {
         pushResponse(loadingItem);
         questions.value = await parseQuiz(nQuest.value, words.value);
         messages.value.pop();
-        if (!questions.value) {
+        if (questions.value.length === 0) {
           pushResponse("Can't genarate questions!");
         } else {
           quizMode.value = true;
+          nQuest.value = questions.value.length;
           currQuestIndex.value = 0;
           correctCount.value = 0;
           pushResponse(
@@ -184,40 +191,33 @@ async function handleRequest() {
       pushRequest(request.value);
       for (let i = 0; i < wordList.length; i++) {
         pushResponse(loadingItem);
-        await analyzeWord(wordList[i]).then((data) => {
-          messages.value.pop();
-          data.forEach((content) => pushResponse(content));
-          if (data.length === 0) {
-            pushResponse(`No result for <strong>${wordList[i]}</strong>`);
-          }
-        });
+        const data = await parseDict(wordList[i]);
+        messages.value.pop();
+        data.forEach((item) => pushResponse(item.content, item.lemma));
+        if (data.length === 0) {
+          pushResponse(`No result for <strong>${wordList[i]}</strong>.`);
+        }
       }
       break;
   }
 }
 
-function isCollectable(item: MessageType) {
-  return (
-    item.type === "response" &&
-    item.content.includes(`class="lemma"`) &&
-    !lemmas.value.includes(parseLemma(item.content))
-  );
-}
-
-async function handleCollect(message: any) {
-  const lemma = parseLemma(message.content);
-  const word = await parseWordData(lemma);
-  if (lemmas.value.includes(lemma)) {
-    pushRequest(`<i><strong>${lemma}</strong> has already existed.</i>`);
+async function handleCollect(message: MessageType) {
+  if (lemmas.value.includes(message.lemma)) {
+    pushRequest(
+      `<i><strong>${message.lemma}</strong> has already existed.</i>`,
+    );
   } else {
+    const word = await parseWordData(message.lemma);
+    words.value.push(word);
+    lemmas.value.push(message.lemma);
+
     await updateChat({
       chatId: currentId.value,
-      word,
+      words: words.value,
     }).then(() => {
-      words.value.push(word);
-      lemmas.value.push(lemma);
       pushResponse(
-        `<i><strong>${lemma}</strong> is collected successfully.</i>`,
+        `<i><strong>${message.lemma}</strong> is collected successfully.</i>`,
       );
     });
   }
@@ -366,7 +366,7 @@ onMounted(async () => {
       <!-- List message -->
       <div
         ref="listRef"
-        class="flex-1 w-full text-xl max-h-full mt-5 overflow-y-scroll select-text cursor-text"
+        class="flex-1 w-full text-xl max-h-full mt-5 overflow-y-scroll"
       >
         <div
           v-for="(item, ind) in paginatedMessages"
@@ -377,7 +377,7 @@ onMounted(async () => {
             <div v-html="item.content" />
           </div>
           <NButton
-            v-if="isCollectable(item)"
+            v-if="item.lemma && !lemmas.includes(item.lemma)"
             size="tiny"
             tertiary
             circle
@@ -439,6 +439,8 @@ onMounted(async () => {
   word-break: normal;
   margin-left: 50px;
   padding: 10px;
+  cursor: text;
+  user-select: text;
 }
 
 .request {

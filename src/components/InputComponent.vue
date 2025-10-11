@@ -42,6 +42,7 @@ function handleOnEscape() {
   showKeyboard.value = false;
   textareaRef.value.blur();
 }
+
 function handleKeyup(event: KeyboardEvent) {
   if (event.key === "Escape") {
     handleOnEscape();
@@ -70,7 +71,7 @@ function handleKeyup(event: KeyboardEvent) {
     }
     return;
   }
-  if (!onGreek.value || event.isComposing) {
+  if (!onGreek.value || event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
   if (event.key.length > 1 && outputChar.value === "") {
@@ -78,18 +79,24 @@ function handleKeyup(event: KeyboardEvent) {
   }
   let pos = textareaRef.value.selectionStart;
   const end = outputText.value.slice(pos, outputText.value.length);
-  const tmp = outputText.value.slice(0, pos) + outputChar.value + end;
+  let tmp: string;
+  tmp = outputText.value.slice(0, pos) + outputChar.value + end;
   pos += outputChar.value.length;
+  if (event.shiftKey && /[A-Z]/.test(event.key)) {
+    outputChar.value = `*${event.key.toLowerCase()}`;
+    tmp = outputText.value.slice(0, pos - 1) + outputChar.value + end;
+    pos += 1;
+  }
   const start = tmp.slice(0, Math.max(pos - 2, 0));
   const mid = betaCodeToGreek(
     greekToBetaCode(tmp.slice(Math.max(pos - 2, 0), pos + 1)),
   );
   outputText.value = start + mid + end.slice(1, end.length);
+  outputChar.value = "";
   nextTick(() => {
     textareaRef.value.focus();
     pos -= tmp.slice(Math.max(pos - 2, 0), pos + 1).length - mid.length;
     textareaRef.value.setSelectionRange(pos, pos);
-    outputChar.value = "";
   });
 }
 
@@ -97,7 +104,7 @@ function handleKeyboardMode() {
   settingsStore.setSetting("keyboard", showVirtual.value);
 }
 
-function handleKeypressEvent(event: KeyboardEvent) {
+function handleKeypress(event: KeyboardEvent) {
   if (event.shiftKey && event.key === " ") {
     event.preventDefault();
     onGreek.value = !onGreek.value;
@@ -122,11 +129,6 @@ function handleOnBackspace() {
 
 onMounted(async () => {
   showVirtual.value = await settingsStore.getSetting("keyboard");
-  window.addEventListener("keypress", handleKeypressEvent);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("keypress", handleKeypressEvent);
 });
 </script>
 
@@ -140,7 +142,8 @@ onUnmounted(() => {
         :class="`w-full bg-secondary border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none overflow-y-auto ${inputStyle}`"
         :placeholder="inputPlaceholder"
         @focus="showKeyboard = true"
-        @keyup="handleKeyup"
+        @keyup.prevent="handleKeyup"
+        @keypress="handleKeypress"
       />
       <div
         v-if="showFooter"

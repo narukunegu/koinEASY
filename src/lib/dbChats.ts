@@ -3,6 +3,7 @@ import Database from "@tauri-apps/plugin-sql";
 const db = await Database.load("sqlite:user.db");
 
 export interface MessageType {
+  lemma?: string;
   type: "request" | "response";
   content: string;
 }
@@ -23,16 +24,13 @@ export async function postChat(chat: any) {
 export async function updateChat(request: any) {
   const chat = await getChat(request.chatId);
   const messages = JSON.parse(chat.messages);
-  const words: any[] = JSON.parse(chat.words);
-  words.push(request.word);
   messages[1] = {
     type: "response",
-    content: `<p><strong>Statistics</strong></p><p>- Words Count: ${words.length}</p>`,
+    content: `<p><strong>Statistics</strong></p><p>- Collection: ${request.words.length}</p>`,
   };
-
   return await db.execute(
     "UPDATE chats SET messages = $1, words = $2 WHERE id = $3",
-    [JSON.stringify(messages), JSON.stringify(words), request.chatId],
+    [JSON.stringify(messages), JSON.stringify(request.words), request.chatId],
   );
 }
 

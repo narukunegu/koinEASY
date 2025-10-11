@@ -1,14 +1,8 @@
 #[cfg(desktop)]
 use plugins::logging;
 
-use std::{
-    fs,
-    io::{Read, Write},
-    path::PathBuf,
-};
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_decorum::WebviewWindowExt;
-use tauri_plugin_fs::{FsExt, OpenOptions};
 use tauri_plugin_sql::{Builder, Migration, MigrationKind};
 
 #[cfg(desktop)]
@@ -79,54 +73,8 @@ pub fn run() {
                 main_window.make_transparent().unwrap();
             }
 
-            let dst_path = "./com.github.koineasy/greek-mor.db";
-            #[cfg(mobile)]
-            let dst_path = "greek-mor.db";
-
-            let app_handle = app.app_handle();
-            let _ = setup_data_file("greek-mor.db", dst_path, &app_handle)?;
-
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-fn setup_data_file<R>(s: &str, d: &str, app: &AppHandle<R>) -> std::io::Result<PathBuf>
-where
-    R: tauri::Runtime,
-{
-    let dst_path = app.app_handle().path().data_dir().unwrap().join(d);
-    if fs::exists(&dst_path).is_ok_and(|e| e) {
-        // destination file with this name already exists
-        return Ok(dst_path);
-    }
-
-    let src_path = app
-        .app_handle()
-        .path()
-        .resource_dir()
-        .unwrap()
-        .join(format!("resources/{s}"));
-    let src_opts = OpenOptions::new().read(true).to_owned();
-    let mut s_f = app.fs().open(src_path, src_opts)?;
-
-    let mut d_f = std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(dst_path.clone())?;
-    let mut buf = vec![0u8; 8192];
-    //let mut sent = 0usize;
-    loop {
-        let l = s_f.read(&mut buf)?;
-        if l == 0 {
-            break;
-        }
-        //sent += l;
-        d_f.write_all(&buf[..l])?;
-    }
-
-    Ok(dst_path)
 }

@@ -3,7 +3,6 @@ import { computed } from "vue";
 import { romanizeKoine } from "@/lib/helpers";
 
 const { content } = defineProps(["content"]);
-const showHint = defineModel("showHint");
 
 const filter = computed(() => {
   let text = "";
@@ -18,16 +17,10 @@ const filter = computed(() => {
   });
   return text;
 });
-
-function handleMouseover(event: MouseEvent) {
-  event.target.title = showHint.value
-    ? romanizeKoine(event.target.dataset.word || "")
-    : "";
-}
 </script>
 
 <template>
-  <div class="word-card text-xl" @mouseover="handleMouseover" v-html="filter" />
+  <div class="word-card text-xl" v-html="filter" />
 </template>
 
 <style>

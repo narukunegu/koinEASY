@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { NButton, NSwitch, NCard, NSkeleton } from "naive-ui";
+import { NButton, NCard, NSkeleton } from "naive-ui";
 import { computed, ref } from "vue";
 
 import InputComponent from "@/components/InputComponent.vue";
-import WordCard from "@/components/WordCard.vue";
 
-import { analyzeWord, parseWordList } from "@/lib/words";
+import { parseDict, parseWordList } from "@/lib/words";
 
 // Reactive state for the input and keyboard modifiers
 const text = ref("");
@@ -13,27 +12,26 @@ const wordList = ref<any[]>([]);
 const computedList = computed(() => {
   return wordList.value.slice(0, 19);
 });
-const isAnalyzing = ref(false);
-const showHint = ref(false);
 
 async function handleOnTypeAnalyze() {
   const newSet = parseWordList(text.value);
-  isAnalyzing.value = true;
   for (let i = 0; i < newSet.length; i++) {
     if (!wordList.value.find((w) => w.query === newSet[i])) {
       wordList.value.unshift({
         query: newSet[i],
         isAnalyzing: true,
       });
-      const req = await analyzeWord(newSet[i]);
+      const req = await parseDict(newSet[i]);
+      if (req.length === 0) {
+        req.push({ content: "<i>No result.</i>" });
+      }
       wordList.value[0] = {
         query: newSet[i],
-        result: req,
+        result: req.map((v) => v.content).join(""),
         isAnalyzing: false,
       };
     }
   }
-  isAnalyzing.value = false;
 }
 </script>
 
@@ -67,10 +65,6 @@ async function handleOnTypeAnalyze() {
             />
           </svg>
         </NButton>
-        <NSwitch v-model:value="showHint" size="large">
-          <template #checked> Show Hint </template>
-          <template #unchecked> Hide Hint </template>
-        </NSwitch>
       </div>
       <div class="flex flex-col h-max-full overflow-y-scroll">
         <NCard
@@ -79,12 +73,12 @@ async function handleOnTypeAnalyze() {
           :title="item.query"
           :segmented="{ content: true }"
           class="mb-2"
-          header-style="font-size: 22px; text-align: center;"
+          header-style="font-size: 1.25rem; text-align: center;"
           size="medium"
           hoverable
         >
           <NSkeleton v-if="item.isAnalyzing" text :repeat="3" />
-          <WordCard v-else v-model:show-hint="showHint" :content="item" />
+          <div v-else class="text-xl" v-html="item.result" />
         </NCard>
       </div>
     </div>
