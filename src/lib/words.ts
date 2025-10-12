@@ -8,10 +8,9 @@ export async function parseDict(query: string) {
 
   let res: string;
   const forms = await getForms(query);
-  console.warn("forms", forms.length);
 
   for (const item of forms) {
-    const lex = await getLexemes(item.lemma);
+    const lex: any = await getLexemes(item.lemma);
     if (lex) {
       res = `<p class="lemma">${lex["dodson-entry"] || lex["mounce-headword"]}: <span class="tr-lang">en</span> ${lex.gloss}</p><ul class="list-disc pl-5">`;
       Object.entries(item.forms).forEach(([key, value]) => {
@@ -56,7 +55,7 @@ function parseDeclension(forms: any, gen: string) {
 
 export async function parseMorph(query: string) {
   const tables = [];
-  const lex = await getLexemes(query);
+  const lex = await getLexemes(query, 0);
   if (!lex) {
     return;
   }
@@ -121,7 +120,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
   let j = 0;
   while (i < nQuest && j < limitGeneration) {
     const word = wordPool[randomInt(wordPool.length)];
-    const lex = await getLexemes(word.lemma);
+    const lex: any = await getLexemes(word.lemma, 0);
     const pick = { ...word, lex };
     const pool = Object.keys(pick.extras);
     const gramm = pool[randomInt(pool.length)];

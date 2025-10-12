@@ -6,14 +6,15 @@ function randomInt(num: number) {
   return Math.floor(Math.random() * num);
 }
 
-export async function getLexemes(query: string) {
-  const lemma = Object.keys(lexemes).find((k) => k === query);
-  if (lemma) {
-    return lexemes[lemma];
-  }
-  return Object.keys(lexemes).find(
-    (k) => normalizeGreek(k) === normalizeGreek(query),
-  );
+export function getLexemes(query: string, timeout: number = 300) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const lemma = Object.keys(lexemes).find((k) => k === query);
+      if (lemma) {
+        resolve(lexemes[lemma]);
+      }
+    }, timeout);
+  });
 }
 
 export async function getForms(query: string) {

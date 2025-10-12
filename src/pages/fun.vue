@@ -441,6 +441,7 @@ onMounted(async () => {
   padding: 10px;
   cursor: text;
   user-select: text;
+  max-width: 80%;
 }
 
 .request {
@@ -459,7 +460,6 @@ onMounted(async () => {
 
 .message-request {
   background: var(--color-blue-400);
-  max-width: 80%;
 }
 
 table {
