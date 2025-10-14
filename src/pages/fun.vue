@@ -92,11 +92,11 @@ async function handleRequest() {
     const ind = words.value.findIndex(
       (w) => w.lemma === questions.value[currQuestIndex.value].lemma,
     );
-    words.value[ind].rating[1]++;
+    words.value[ind].stats.rating[1]++;
     if (answer.includes(wordList[0])) {
       pushResponse("<i>Your answer is correct!</i>");
       correctCount.value++;
-      words.value[ind].rating[0]++;
+      words.value[ind].stats.rating[0]++;
     } else {
       pushResponse(
         `<p><i>Your answer is incorrect!</i></p><p>The correct answer is <strong>${answer}</strong>.</p>`,
@@ -181,7 +181,7 @@ async function handleRequest() {
           );
           questions.value.forEach((q) => {
             const ind = words.value.findIndex((w) => w.lemma === q.lemma);
-            words.value[ind].rating = [0, 0];
+            words.value[ind].stats.rating = [0, 0];
           });
         }
       }

@@ -12,6 +12,15 @@ export function getLexemes(query: string, timeout: number = 300) {
       const lemma = Object.keys(lexemes).find((k) => k === query);
       if (lemma) {
         resolve(lexemes[lemma]);
+      } else {
+        const lemmaN = Object.keys(lexemes).find(
+          (k) => normalizeGreek(k) === normalizeGreek(query),
+        );
+        if (lemmaN) {
+          resolve(lexemes[lemmaN]);
+        } else {
+          resolve({ gloss: undefined });
+        }
       }
     }, timeout);
   });

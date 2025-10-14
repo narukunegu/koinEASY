@@ -19,7 +19,7 @@ export async function parseDict(query: string) {
         }
       });
       res += "</ul>";
-      response.push({ content: res, lemma: query });
+      response.push({ content: res, lemma: item.lemma });
     }
   }
   return Promise.resolve(response);
@@ -167,7 +167,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
         if (questions.find((q) => q.question.includes(question))) {
           continue;
         }
-        answer = pick.extras[gramm];
+        answer = [pick.extras[gramm]];
         break;
     }
     questions.push({ question, answer, lemma: pick.lemma });
