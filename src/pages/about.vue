@@ -24,3 +24,9 @@ import { NDivider } from "naive-ui";
     </div>
   </div>
 </template>
+
+<style scoped>
+.lemma {
+  justify-items: center;
+}
+</style>

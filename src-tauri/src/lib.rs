@@ -1,9 +1,9 @@
 #[cfg(desktop)]
 use plugins::logging;
 
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::Manager;
 use tauri_plugin_decorum::WebviewWindowExt;
-use tauri_plugin_sql::{Builder, Migration, MigrationKind};
+use tauri_plugin_sql::{Migration, MigrationKind};
 
 #[cfg(desktop)]
 pub mod plugins;

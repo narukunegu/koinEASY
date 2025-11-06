@@ -28,6 +28,9 @@ export function getLexemes(query: string, timeout: number = 300) {
 
 export async function getForms(query: string) {
   const res = [];
+  if (!query) {
+    return res;
+  }
   query = query.replace(/[;:,.]/g, "");
   const nuy = `${
     query[query.length - 1] === "ν" ? query.slice(0, query.length - 1) : query

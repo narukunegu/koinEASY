@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NSkeleton } from "naive-ui";
+import { DeleteOutlineOutlined } from "@vicons/material";
+import { NButton, NCard, NIcon, NSkeleton } from "naive-ui";
 import { computed, ref } from "vue";
 
 import InputComponent from "@/components/InputComponent.vue";
@@ -52,18 +53,10 @@ async function handleOnTypeAnalyze() {
     <!-- Result list -->
     <div class="h-[90vh] w-[40vw] flex flex-col text-xl m-1 pr-5 rounded-lg">
       <div class="flex justify-between items-center mr-2 my-2">
-        <NButton size="small" round type="primary" @click="wordList = []">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="currentColor"
-              d="M7 4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2h4a1 1 0 1 1 0 2h-1.069l-.867 12.142A2 2 0 0 1 17.069 22H6.93a2 2 0 0 1-1.995-1.858L4.07 8H3a1 1 0 0 1 0-2h4zm2 2h6V4H9zM6.074 8l.857 12H17.07l.857-12zM10 10a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1"
-            />
-          </svg>
+        <NButton size="small" round type="warning" @click="wordList = []">
+          <template #icon>
+            <NIcon size="20" :component="DeleteOutlineOutlined" />
+          </template>
         </NButton>
       </div>
       <div class="flex flex-col h-max-full overflow-y-scroll">

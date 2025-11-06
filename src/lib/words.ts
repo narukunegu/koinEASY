@@ -2,6 +2,9 @@ import { getForms, getLexemes, randomLex } from "./data.ts";
 
 export async function parseDict(query: string) {
   const response: any[] = [];
+  if (!query) {
+    return response;
+  }
   const nuy = `${
     query[query.length - 1] === "ν" ? query.slice(0, query.length - 1) : query
   }(ν)`;
@@ -45,10 +48,10 @@ export async function parseWordData(lemma: string) {
 
 function parseDeclension(forms: any, gen: string) {
   let table = `<thead><tr><th class="w-10"></th><th class="w-20">Sg</th><th class="w-20">Pl</th></tr></thead>`;
-  let tr = `<tr><td>Nom.</td><td>${forms[`${gen}.NS`]}</td><td>${forms[`${gen}.NP`] || ""}</td><tr>`;
-  tr += `<tr><td>Gen.</td><td>${forms[`${gen}.GS`] || ""}</td><td>${forms[`${gen}.GP`] || ""}</td><tr>`;
-  tr += `<tr><td>Dat.</td><td>${forms[`${gen}.DS`] || ""}</td><td>${forms[`${gen}.DP`] || ""}</td><tr>`;
-  tr += `<tr><td>Acc.</td><td>${forms[`${gen}.AS`] || ""}</td><td>${forms[`${gen}.AP`] || ""}</td><tr>`;
+  let tr = `<tr><td>Nom.</td><td>${forms[`${gen}.NS.`]}</td><td>${forms[`${gen}.NP.`] || ""}</td><tr>`;
+  tr += `<tr><td>Gen.</td><td>${forms[`${gen}.GS.`] || ""}</td><td>${forms[`${gen}.GP.`] || ""}</td><tr>`;
+  tr += `<tr><td>Dat.</td><td>${forms[`${gen}.DS.`] || ""}</td><td>${forms[`${gen}.DP.`] || ""}</td><tr>`;
+  tr += `<tr><td>Acc.</td><td>${forms[`${gen}.AS.`] || ""}</td><td>${forms[`${gen}.AP.`] || ""}</td><tr>`;
   table += `<tbody>${tr}</tbody>`;
   return table;
 }
@@ -115,7 +118,7 @@ export async function parseQuiz(nQuest: number, words: any[]) {
   let answer: string[];
   let choices = [];
 
-  const limitGeneration = 100000;
+  const limitGeneration = 1000;
   let i = 0;
   let j = 0;
   while (i < nQuest && j < limitGeneration) {
@@ -192,4 +195,17 @@ export async function parseForm(word: string) {
     });
   });
   return res;
+}
+
+export async function parseRaw(query: string) {
+  const res = await getLexemes(query, 0);
+  if (res) {
+    const tmp = JSON.stringify(res)
+      .replace(`{`, `{<br />`)
+      .replace(`}`, `<br />}`)
+      .replace(/",/g, `",<br />`);
+    return `<p>${tmp}</p>`;
+  } else {
+    return "";
+  }
 }

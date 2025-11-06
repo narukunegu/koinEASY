@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { useScroll } from "@vueuse/core";
-import { NButton, NInput, NList, NListItem, NSpace } from "naive-ui";
+import {
+  DriveFileRenameOutlineRound,
+  DeleteFilled,
+  AddRound,
+  BookmarkAddOutlined,
+  KeyboardDoubleArrowDownRound,
+} from "@vicons/material";
+import { NButton, NIcon, NInput, NList, NListItem, NSpace } from "naive-ui";
 import InputComponent from "@/components/InputComponent.vue";
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
@@ -19,7 +26,7 @@ import {
   parseMorph,
   parseWordList,
   parseWordData,
-  parseForm,
+  parseRaw,
 } from "@/lib/words";
 
 const loadingItem = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"> <circle cx="18" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin=".67" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> <circle cx="12" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin=".33" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> <circle cx="6" cy="12" r="0" fill="currentColor"> <animate attributeName="r" begin="0" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0" /> </circle> </svg>`;
@@ -83,6 +90,9 @@ function pushRequest(content: string) {
 }
 
 async function handleRequest() {
+  if (!request.value) {
+    return;
+  }
   const wordList = parseWordList(request.value);
   // handle quiz mode
   if (quizMode.value) {
@@ -123,17 +133,17 @@ async function handleRequest() {
 
   const command = wordList.shift();
   switch (command) {
-    case "/form":
+    case "/raw":
       pushRequest(
-        `<span class="font-extrabold pr-2">/form</span><span>${wordList[0]}</span>`,
+        `<span class="font-extrabold pr-2">/raw</span><span>${wordList[0]}</span>`,
       );
       pushResponse(loadingItem);
-      res = await parseForm(wordList[0]);
+      res = await parseRaw(wordList[0]);
       messages.value.pop();
       if (res.length === 0) {
         pushResponse(`No result for ${wordList[0]}.`);
       } else {
-        pushResponse(res.join(""));
+        pushResponse(res);
       }
       break;
 
@@ -229,6 +239,7 @@ async function loadChat(chatId: number) {
   quizMode.value = false;
   await getChat(chatId).then((data) => {
     messages.value = JSON.parse(data.messages);
+    currentPage.value = 0;
     words.value = JSON.parse(data.words);
     lemmas.value = words.value.map((w) => w.lemma);
     isLoadingChat.value = false;
@@ -283,56 +294,35 @@ onMounted(async () => {
 
 <template>
   <div class="h-[95vh] w-[95vw] flex">
-    <div class="w-1/5 border-1">
+    <div class="w-72 border-1">
       <NList clickable hoverable>
         <template #header>
           <div class="flex justify-between">
-            <div class="text-xl font-bold">Chats</div>
+            <div class="text-lg font-bold">Chats</div>
             <NButton size="small" round @click="handleAddChat">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="currentColor"
-                  d="M11 13H6q-.425 0-.712-.288T5 12t.288-.712T6 11h5V6q0-.425.288-.712T12 5t.713.288T13 6v5h5q.425 0 .713.288T19 12t-.288.713T18 13h-5v5q0 .425-.288.713T12 19t-.712-.288T11 18z"
-                />
-              </svg>
+              <template #icon>
+                <NIcon size="20" :component="AddRound" />
+              </template>
             </NButton>
           </div>
         </template>
         <NListItem
           v-for="chat in titleList"
           :key="chat.id"
-          class="items-center text-lg"
+          class="items-center text-sm"
           :class="{ 'bg-gray-500': chat.id === currentId }"
         >
           <template #suffix>
             <NSpace :wrap="false" align="center" justify="end" size="small">
               <NButton size="tiny" round @click="handleRename(chat.id)">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="m15 16l-4 4h10v-4zm-2.94-8.81L3 16.25V20h3.75l9.06-9.06zm6.65.85c.39-.39.39-1.04 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83l3.75 3.75z"
-                  />
-                </svg>
+                <template #icon>
+                  <NIcon size="20" :component="DriveFileRenameOutlineRound" />
+                </template>
               </NButton>
               <NButton size="tiny" round @click="removeChat(chat)">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21zM17 6H7v13h10zM9 17h2V8H9zm4 0h2V8h-2zM7 6v13z"
-                  />
-                </svg>
+                <template #icon>
+                  <NIcon size="20" :component="DeleteFilled" />
+                </template>
               </NButton>
             </NSpace>
           </template>
@@ -383,17 +373,9 @@ onMounted(async () => {
             circle
             @click="handleCollect(item)"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="m11.066 8.004l.184-.005h7.5a3.25 3.25 0 0 1 3.245 3.065l.005.185v7.5a3.25 3.25 0 0 1-3.066 3.245l-.184.005h-7.5a3.25 3.25 0 0 1-3.245-3.066L8 18.75v-7.5a3.25 3.25 0 0 1 3.066-3.245M18.75 9.5h-7.5a1.75 1.75 0 0 0-1.744 1.606l-.006.144v7.5a1.75 1.75 0 0 0 1.607 1.744l.143.006h7.5a1.75 1.75 0 0 0 1.744-1.607l.006-.143v-7.5a1.75 1.75 0 0 0-1.75-1.75M15 11a.75.75 0 0 1 .75.75v2.498h2.5a.75.75 0 0 1 0 1.5h-2.5v2.502a.75.75 0 0 1-1.5 0v-2.502h-2.5a.75.75 0 1 1 0-1.5h2.5V11.75A.75.75 0 0 1 15 11m.582-6.767l.052.177l.693 2.588h-1.553l-.588-2.2a1.75 1.75 0 0 0-2.144-1.238L4.798 5.502a1.75 1.75 0 0 0-1.27 1.995l.032.148l1.942 7.244A1.75 1.75 0 0 0 7 16.176v1.506a3.25 3.25 0 0 1-2.895-2.228l-.052-.176l-1.941-7.245a3.25 3.25 0 0 1 2.12-3.928l.178-.052l7.244-1.941a3.25 3.25 0 0 1 3.928 2.12"
-              />
-            </svg>
+            <template #icon>
+              <NIcon size="20" :component="BookmarkAddOutlined" />
+            </template>
           </NButton>
         </div>
       </div>
@@ -404,17 +386,9 @@ onMounted(async () => {
           size="medium"
           ghost
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="currentColor"
-              d="M11 4h2v12l5.5-5.5l1.42 1.42L12 19.84l-7.92-7.92L5.5 10.5L11 16z"
-            />
-          </svg>
+          <template #icon>
+            <NIcon size="20" :component="KeyboardDoubleArrowDownRound" />
+          </template>
           <span>Scroll to bottom</span>
         </NButton>
       </div>
@@ -464,7 +438,7 @@ onMounted(async () => {
 
 table {
   text-align: center;
-  width: 60vw;
+  width: 40vw;
   border-collapse: collapse;
 }
 

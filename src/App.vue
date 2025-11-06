@@ -2,7 +2,6 @@
 import { ref, watch } from "vue";
 import AppSidebar from "@/components/AppSidebar.vue";
 import AppTopbar from "@/components/AppTopbar.vue";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { NConfigProvider, darkTheme } from "naive-ui";
 import { useColorMode } from "@vueuse/core";
 
@@ -17,14 +16,12 @@ watch(color, () => {
   <NConfigProvider :theme="theme === 'dark' ? darkTheme : null">
     <body class="h-full">
       <AppTopbar />
-      <TooltipProvider>
-        <main class="flex">
-          <AppSidebar />
-          <section class="bg-background grow">
-            <router-view />
-          </section>
-        </main>
-      </TooltipProvider>
+      <main class="flex">
+        <AppSidebar />
+        <section class="bg-background grow">
+          <router-view />
+        </section>
+      </main>
     </body>
   </NConfigProvider>
 </template>

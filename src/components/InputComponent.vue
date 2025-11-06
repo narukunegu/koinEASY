@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-  useTemplateRef,
-  nextTick,
-} from "vue";
-import { NSwitch } from "naive-ui";
+import { SendRound } from "@vicons/material";
+import { computed, onMounted, ref, useTemplateRef, nextTick } from "vue";
+import { NButton, NIcon, NSwitch } from "naive-ui";
 import { useSettingsStore } from "@/stores/settings";
 
 import KeyboardComponent from "@/components/KeyboardComponent.vue";
@@ -47,55 +41,42 @@ function handleKeyup(event: KeyboardEvent) {
   if (event.key === "Escape") {
     handleOnEscape();
   }
-  if (event.key === "Enter") {
-    emit("onEntered");
-  }
   if (event.key === " ") {
     emit("onSpaced");
   }
-  if (commandMode) {
-    const tmp = outputText.value.trim().split(" ");
-    mode.value = tmp.length <= 1 && tmp[0][0] === "/" ? "command" : "normal";
-  }
-  if (mode.value === "command") {
-    switch (event.key) {
-      case " ":
-        mode.value = "normal";
-        break;
-
-      case "Enter":
-        mode.value = "normal";
-        break;
-      default:
-        break;
-    }
-    return;
-  }
-  if (!onGreek.value || event.ctrlKey || event.altKey || event.metaKey) {
-    return;
-  }
-  if (event.key.length > 1 && outputChar.value === "") {
+  if (
+    !onGreek.value ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    (!/^[a-z/\\|=()+]$/i.test(event.key) && outputChar.value === "")
+  ) {
     return;
   }
   let pos = textareaRef.value.selectionStart;
   const end = outputText.value.slice(pos, outputText.value.length);
-  let tmp: string;
-  tmp = outputText.value.slice(0, pos) + outputChar.value + end;
-  pos += outputChar.value.length;
-  if (event.shiftKey && /[A-Z]/.test(event.key)) {
+  if (/[A-Z]/.test(event.key)) {
+    pos--;
     outputChar.value = `*${event.key.toLowerCase()}`;
-    tmp = outputText.value.slice(0, pos - 1) + outputChar.value + end;
-    pos += 1;
   }
-  const start = tmp.slice(0, Math.max(pos - 2, 0));
-  const mid = betaCodeToGreek(
-    greekToBetaCode(tmp.slice(Math.max(pos - 2, 0), pos + 1)),
-  );
-  outputText.value = start + mid + end.slice(1, end.length);
+  let tmp: string = `${outputText.value.slice(0, pos) + outputChar.value} \x01${end}`;
+
+  const words = tmp.trim().split(" ");
+  let command = words.shift();
+  if (commandMode && command[0] === "/") {
+    command += " ";
+  } else {
+    words.unshift(command);
+    command = "";
+  }
+  tmp = `${command}${betaCodeToGreek(greekToBetaCode(words.join(" ")))}`;
+  pos = tmp.indexOf(` \x01`);
+  tmp = tmp.replace(` \x01`, "");
+
+  outputText.value = tmp;
   outputChar.value = "";
   nextTick(() => {
     textareaRef.value.focus();
-    pos -= tmp.slice(Math.max(pos - 2, 0), pos + 1).length - mid.length;
     textareaRef.value.setSelectionRange(pos, pos);
   });
 }
@@ -108,6 +89,12 @@ function handleKeypress(event: KeyboardEvent) {
   if (event.shiftKey && event.key === " ") {
     event.preventDefault();
     onGreek.value = !onGreek.value;
+  }
+  if (event.key === "Enter") {
+    if (commandMode) {
+      event.preventDefault();
+    }
+    emit("onEntered");
   }
 }
 
@@ -169,26 +156,13 @@ onMounted(async () => {
             <template #unchecked> Virtual Off </template>
           </NSwitch>
         </div>
-        <button
-          class="h-10 w-10 mx-2 px-2 rounded-lg bg-gray-500"
-          @click="emit('onEntered')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="m14 10l-3 3m9.288-9.969a.535.535 0 0 1 .68.681l-5.924 16.93a.535.535 0 0 1-.994.04l-3.219-7.242a.54.54 0 0 0-.271-.271l-7.242-3.22a.535.535 0 0 1 .04-.993z"
-            />
-          </svg>
-        </button>
+        <div class="mx-2">
+          <NButton size="medium" type="info" circle @click="emit('onEntered')">
+            <template #icon>
+              <NIcon size="15" :component="SendRound" />
+            </template>
+          </NButton>
+        </div>
       </div>
     </div>
     <div class="flex justify-between items-center my-2" />

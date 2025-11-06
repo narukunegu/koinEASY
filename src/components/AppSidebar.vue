@@ -1,82 +1,90 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
-import { useI18n } from "vue-i18n";
-import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-const { t } = useI18n();
+  ChatBubbleOutlineOutlined,
+  ManageSearchOutlined,
+  SettingsFilled,
+  InfoOutlined,
+} from "@vicons/material";
+import { NButton, NIcon, NPopover } from "naive-ui";
 
 const sidebarRoutes = [
   {
-    name: "fast.label",
-    icon: "akar-icons:thunder",
+    name: "Fast",
+    icon: ManageSearchOutlined,
     path: "/fast",
   },
-  { name: "fun.label", icon: "ph:chat", path: "/fun" },
+  {
+    name: "Fun",
+    icon: ChatBubbleOutlineOutlined,
+    path: "/fun",
+  },
+];
+
+const sidebarBots = [
+  {
+    name: "Settings",
+    icon: SettingsFilled,
+    path: "/settings",
+  },
+  {
+    name: "About",
+    icon: InfoOutlined,
+    path: "/about",
+  },
 ];
 </script>
 
 <template>
   <aside class="flex flex-col h-dvh pb-12 pt-2 px-2 justify-between bg-sidebar">
     <nav class="grid gap-1">
-      <Tooltip v-for="sidebarRoute in sidebarRoutes" :key="sidebarRoute.name">
-        <TooltipTrigger as-child>
+      <NPopover
+        v-for="sidebarRoute in sidebarRoutes"
+        :key="sidebarRoute.name"
+        placement="right"
+        trigger="hover"
+      >
+        <template #trigger>
           <RouterLink :to="sidebarRoute.path">
-            <Button
-              variant="ghost"
-              size="icon"
-              :class="sidebarRoute.path === $route.path ? 'bg-muted' : ''"
-              class="rounded-lg"
-              :aria-label="t(sidebarRoute.name)"
+            <NButton
+              :quaternary="sidebarRoute.path !== $route.path"
+              :secondary="sidebarRoute.path === $route.path"
+              round
+              size="tiny"
+              style="padding: 15px"
             >
-              <Icon :icon="sidebarRoute.icon" class="size-5" />
-            </Button>
+              <template #icon>
+                <NIcon size="20" :component="sidebarRoute.icon" />
+              </template>
+            </NButton>
           </RouterLink>
-        </TooltipTrigger>
-        <TooltipContent side="right" :side-offset="5">
-          {{ t(sidebarRoute.name) }}
-        </TooltipContent>
-      </Tooltip>
+        </template>
+        {{ sidebarRoute.name }}
+      </NPopover>
     </nav>
     <div class="grid grid-cols-1">
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <RouterLink to="/settings">
-            <Button
-              variant="ghost"
-              size="icon"
-              :class="'/settings' === $route.path ? 'bg-muted' : ''"
-              class="mt-auto rounded-lg"
-              :aria-label="t('settings.label')"
+      <NPopover
+        v-for="item in sidebarBots"
+        :key="item.name"
+        placement="right"
+        trigger="hover"
+      >
+        <template #trigger>
+          <RouterLink :to="item.path">
+            <NButton
+              :quaternary="item.path !== $route.path"
+              :secondary="item.path === $route.path"
+              round
+              size="tiny"
+              style="padding: 15px"
             >
-              <Icon icon="ph:gear-duotone" class="size-5" />
-            </Button>
+              <template #icon>
+                <NIcon size="20" :component="item.icon" />
+              </template>
+            </NButton>
           </RouterLink>
-        </TooltipTrigger>
-        <TooltipContent side="right" :side-offset="5">
-          {{ t("settings.label") }}
-        </TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <RouterLink to="/about">
-            <Button
-              variant="ghost"
-              size="icon"
-              :class="'/about' === $route.path ? 'bg-muted' : ''"
-              class="mt-auto rounded-lg"
-              aria-label="About"
-            >
-              <Icon icon="ix:about" class="size-5" />
-            </Button>
-          </RouterLink>
-        </TooltipTrigger>
-        <TooltipContent side="right" :side-offset="5"> About </TooltipContent>
-      </Tooltip>
+        </template>
+        {{ item.name }}
+      </NPopover>
     </div>
   </aside>
 </template>
