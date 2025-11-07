@@ -17,3 +17,9 @@ pub fn tauri_plugin_logging() -> TauriPlugin<tauri::Wry> {
 fn dev_logging_target() -> tauri_plugin_log::Target {
     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout)
 }
+
+fn prod_logging_target() -> tauri_plugin_log::Target {
+    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+        file_name: Some("logs".to_string()),
+    })
+}
