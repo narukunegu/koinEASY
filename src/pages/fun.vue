@@ -133,9 +133,9 @@ async function handleRequest() {
 
   const command = wordList.shift();
   switch (command) {
-    case "/raw":
+    case "@raw":
       pushRequest(
-        `<span class="font-extrabold pr-2">/raw</span><span>${wordList[0]}</span>`,
+        `<span class="font-extrabold pr-2">@raw</span><span>${wordList[0]}</span>`,
       );
       pushResponse(loadingItem);
       res = await parseRaw(wordList[0]);
@@ -147,16 +147,16 @@ async function handleRequest() {
       }
       break;
 
-    case "/words":
-      pushRequest(`<span class="font-extrabold">/words</span>`);
+    case "@words":
+      pushRequest(`<span class="font-extrabold">@words</span>`);
       content = `<p><strong>Word collection: ${lemmas.value.length}</strong></p>`;
       content += `<p>${lemmas.value.join("; ")}</p>`;
       pushResponse(content);
       break;
 
-    case "/morph":
+    case "@morph":
       pushRequest(
-        `<span class="font-extrabold pr-2">/morph</span><span>${wordList[0]}</span>`,
+        `<span class="font-extrabold pr-2">@morph</span><span>${wordList[0]}</span>`,
       );
       res = await parseMorph(wordList[0]);
       if (res.length !== 0) {
@@ -168,9 +168,9 @@ async function handleRequest() {
       }
       break;
 
-    case "/quiz":
+    case "@quiz":
       pushRequest(
-        `<span class="font-extrabold mr-2">/quiz</span><span>${wordList.join(" ")}</span>`,
+        `<span class="font-extrabold mr-2">@quiz</span><span>${wordList.join(" ")}</span>`,
       );
       nQuest.value = Number.parseInt(wordList[0]);
       if (!Number.isInteger(nQuest.value) || nQuest.value > 100) {

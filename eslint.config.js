@@ -29,6 +29,7 @@ export default antfu(
       "perfectionist/sort-imports": ["off"],
       "perfectionist/sort-named-imports": ["off"],
       "vue/operator-linebreak": ["off"],
+      "vue/singleline-html-element-content-newline": ["off"],
     },
   },
 );

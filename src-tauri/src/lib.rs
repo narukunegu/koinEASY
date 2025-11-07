@@ -1,6 +1,3 @@
-#[cfg(desktop)]
-use plugins::logging;
-
 use tauri::Manager;
 use tauri_plugin_decorum::WebviewWindowExt;
 use tauri_plugin_sql::{Migration, MigrationKind};
